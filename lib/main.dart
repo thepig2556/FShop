@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'favorite_page.dart'; // THÊM import này
+import 'cart_page.dart';
+import 'favorite_page.dart';
+import 'profile.dart';
 
 void main() {
   runApp(const MyApp());
@@ -7,17 +9,58 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Trang Yêu thích',
+      title: 'App Navigation',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
-        useMaterial3: true,
+      home: const MainScreen(),
+    );
+  }
+}
+
+class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
+
+  @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  int currentIndex = 3; // Mặc định trang yêu thích
+
+  final List<Widget> pages = [
+    Center(child: Text("Trang chủ")), // Index 0
+    Center(child: Text("Trang tìm kiếm")), // Index 1
+    CartPage(), // Index 2
+    FavoritePage(),                        // Index 3
+    ProfilePage(),                         // Index 4
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: IndexedStack(
+        index: currentIndex,
+        children: pages,
       ),
-      home: FavoritePage(), // CHẠY TRANG YÊU THÍCH
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: currentIndex,
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: Colors.green,
+        onTap: (index) {
+          setState(() {
+            currentIndex = index;
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.category), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
+        ],
+      ),
     );
   }
 }

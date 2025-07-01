@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'profile.dart';
 
 class FavoritePage extends StatelessWidget {
   final List<Product> favoriteItems = [
-    Product("Pizza ngập phô mai", "https://i.imgur.com/1YcWl0N.jpg", 4.5, "9inch", 175000),
-    Product("Pizza Đậm Bỏng Bắp", "https://i.imgur.com/Uw4Fqxy.jpg", 4.0, "12inch", 305000),
-    Product("Pizza hải sản", "https://i.imgur.com/yF6psuQ.jpg", 4.2, "9inch", 225000),
-    Product("Kem vani", "https://i.imgur.com/WvFIR61.jpg", 3.8, "1", 35000),
-    Product("Cocola", "https://i.imgur.com/z5rW1Ew.png", 3.7, "1", 15000),
-    Product("Kem socola", "https://i.imgur.com/KnwWWmW.jpg", 4.5, "1", 35000),
+    Product("Pizza ngập phô mai", "assets/images/pizza1.png", 4.5, "9inch", 175000),
+    Product("Pizza Dăm Bông Bắp", "assets/images/pizza2.png", 4.0, "12inch", 305000),
+    Product("Pizza hải sản", "assets/images/pz3.png", 4.2, "9inch", 225000),
+    Product("Kem vani", "assets/images/kem1.png", 3.8, "1", 35000),
+    Product("Kem socola", "assets/images/kem2.png", 4.5, "1", 35000),
+    Product("Cocola", "assets/images/cola.png", 3.7, "1", 15000),
   ];
 
   @override
@@ -56,18 +57,6 @@ class FavoritePage extends StatelessWidget {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 3,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.green,
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.category), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
-        ],
-      ),
     );
   }
 }
@@ -100,12 +89,19 @@ class ProductCard extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-                child: Image.network(
+                child: product.imagePath.startsWith('http')
+                    ? Image.network(
                   product.imagePath,
                   height: 100,
                   width: double.infinity,
                   fit: BoxFit.cover,
                 )
+                    : Image.asset(
+                  product.imagePath,
+                  height: 100,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
               ),
               Positioned(
                 right: 6,
