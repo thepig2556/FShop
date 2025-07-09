@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'cart_page.dart';
 import 'favorite_page.dart';
 import 'profile.dart';
+import 'login_page.dart'; // Import trang login
 
 void main() {
   runApp(const MyApp());
@@ -12,9 +13,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'App Navigation',
+      title: 'Pizza MART',
       debugShowCheckedModeBanner: false,
-      home: const MainScreen(),
+      home: const LoginPage(), // Bắt đầu từ trang đăng nhập
     );
   }
 }
