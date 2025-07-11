@@ -4,63 +4,91 @@ import 'package:doan/register_page.dart';
 import 'package:flutter/material.dart';
 import 'login_page.dart';
 
-class LoginFormPage extends StatelessWidget {
+class LoginFormPage extends StatefulWidget {
   const LoginFormPage({super.key});
+
+  @override
+  State<LoginFormPage> createState() => _LoginFormPageState();
+}
+
+class _LoginFormPageState extends State<LoginFormPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _obscureText = true;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF6CC04A),
+      backgroundColor: const Color(0xFF2E4057), // Màu xanh navy nhẹ
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 40),
+              const SizedBox(height: 0),
               const Text(
                 'Đăng nhập',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white, fontSize: 50, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Color(0xFFF8F9FA), // Màu trắng kem
+                  fontSize: 50,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 5),
               const Text(
                 'Đặt món dễ dàng\nGiao hàng nhanh chóng',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white70, fontSize: 25, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
-              _buildPizzaLogo(),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
+                style: TextStyle(
+                  color: Color(0xFFD5DBDB), // Màu xám nhẹ
+                  fontSize: 25,
+                  fontWeight: FontWeight.w500,
+                  height: 1.4,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Email',
-                      textAlign: TextAlign.left,
-                      style: TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              _buildPizzaLogo(),
+              const SizedBox(height: 30),
+              Container(
+                padding: const EdgeInsets.all(25),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8F9FA), // Màu trắng kem
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
-                    _buildEmailField(),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Mật khẩu',
-                      textAlign: TextAlign.left,
-                      style: TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    _buildPasswordField(),
-                    const SizedBox(height: 20),
-                    _buildLoginButton(context),
-                    const SizedBox(height: 10),
-                    _buildRegisterLink(context),
-                    _buildForgotPasswordLink(context),
                   ],
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildFieldLabel('Email'),
+                      _buildEmailField(),
+                      const SizedBox(height: 25),
+                      _buildFieldLabel('Mật khẩu'),
+                      _buildPasswordField(),
+                      const SizedBox(height: 25),
+                      _buildLoginButton(context),
+                      const SizedBox(height: 15),
+                      _buildForgotPasswordLink(context),
+                      const SizedBox(height: 0),
+                      _buildRegisterLink(context),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -75,54 +103,144 @@ class LoginFormPage extends StatelessWidget {
       child: Container(
         width: 120,
         height: 120,
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.white,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Image.asset(
+            'assets/images/logo1.png',
+            fit: BoxFit.cover,
+          ),
         ),
-        child: Image.asset(
-          'assets/images/logo.png', // Đường dẫn đến file logo.png
-          fit: BoxFit.cover, // Đảm bảo hình ảnh lấp đầy container
+      ),
+    );
+  }
+
+  Widget _buildFieldLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Color(0xFF2E4057), // Màu xanh navy
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
   }
 
   Widget _buildEmailField() {
-    return TextField(
+    return TextFormField(
+      controller: _emailController,
+      style: const TextStyle(
+        fontSize: 18,
+        color: Color(0xFF2E4057),
+      ),
       decoration: InputDecoration(
-        labelText: 'Nhập email',
-        prefixIcon: const Icon(Icons.email),
+        labelText: 'Nhập email của bạn',
+        labelStyle: const TextStyle(
+          color: Color(0xFF5D6D7E),
+          fontSize: 16,
+        ),
+        prefixIcon: const Icon(
+          Icons.email,
+          color: Color(0xFF1565C0),
+          size: 24,
+        ),
         filled: true,
         fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF1565C0), width: 2),
+        ),
       ),
+      validator: (value) => value!.isEmpty ? 'Vui lòng nhập email' : null,
     );
   }
 
   Widget _buildPasswordField() {
-    return TextField(
-      obscureText: true,
+    return TextFormField(
+      controller: _passwordController,
+      obscureText: _obscureText,
+      style: const TextStyle(
+        fontSize: 18,
+        color: Color(0xFF2E4057),
+      ),
       decoration: InputDecoration(
-        labelText: 'Mật khẩu',
-        prefixIcon: const Icon(Icons.lock),
+        labelText: 'Nhập mật khẩu',
+        labelStyle: const TextStyle(
+          color: Color(0xFF5D6D7E),
+          fontSize: 16,
+        ),
+        prefixIcon: const Icon(
+          Icons.lock,
+          color: Color(0xFFC62828),
+          size: 24,
+        ),
+        suffixIcon: IconButton(
+          icon: Icon(
+            _obscureText ? Icons.visibility : Icons.visibility_off,
+            color: const Color(0xFFC62828),
+            size: 24,
+          ),
+          onPressed: () {
+            setState(() {
+              _obscureText = !_obscureText;
+            });
+          },
+        ),
         filled: true,
         fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFC62828), width: 2),
+        ),
       ),
+      validator: (value) => value!.isEmpty ? 'Vui lòng nhập mật khẩu' : null,
     );
   }
 
   Widget _buildLoginButton(BuildContext context) {
     return SizedBox(
-      height: 50,
+      height: 56,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF6CC04A),
+          backgroundColor: const Color(0xFF1B5E20), // Màu xanh lá đậm
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 3,
         ),
-        onPressed: () => _navToMain(context),
-        child: const Text('Đăng nhập', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+        onPressed: () {
+          if (_formKey.currentState!.validate()) {
+            _navToMain(context);
+          }
+        },
+        child: const Text(
+          'Đăng nhập',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
     );
   }
@@ -133,7 +251,17 @@ class LoginFormPage extends StatelessWidget {
         context,
         MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
       ),
-      child: const Text('Quên mật khẩu', style: TextStyle(color: Colors.green, fontSize: 16, fontWeight: FontWeight.w600)),
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+      ),
+      child: const Text(
+        'Quên mật khẩu?',
+        style: TextStyle(
+          color: Color(0xFF1B5E20),
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 
@@ -143,16 +271,28 @@ class LoginFormPage extends StatelessWidget {
         context,
         MaterialPageRoute(builder: (_) => const RegisterPage()),
       ),
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+      ),
       child: RichText(
+        textAlign: TextAlign.center,
         text: const TextSpan(
           children: [
             TextSpan(
               text: 'Chưa có tài khoản? ',
-              style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: Color(0xFF5D6D7E),
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             TextSpan(
               text: 'Tạo tài khoản',
-              style: TextStyle(color: Colors.green, fontSize: 16, fontWeight: FontWeight.w600), // Màu xanh lá cho "Tạo tài khoản"
+              style: TextStyle(
+                color: Color(0xFF1B5E20),
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
