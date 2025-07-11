@@ -1,3 +1,4 @@
+import 'package:doan/home_page.dart';
 import 'package:flutter/material.dart';
 import 'cart_page.dart';
 import 'favorite_page.dart';
@@ -31,7 +32,7 @@ class _MainScreenState extends State<MainScreen> {
   int currentIndex = 3; // Mặc định trang yêu thích
 
   final List<Widget> pages = [
-    Center(child: Text("Trang chủ")), // Index 0
+    HomePage(), // Index 0
     Center(child: Text("Trang tìm kiếm")), // Index 1
     CartPage(), // Index 2
     FavoritePage(),                        // Index 3
