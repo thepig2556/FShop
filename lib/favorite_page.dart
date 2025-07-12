@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'profile.dart';
 
 class FavoritePage extends StatelessWidget {
   final List<Product> favoriteItems = [
@@ -14,22 +13,22 @@ class FavoritePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFEFF8F1),
+      backgroundColor: const Color(0xFF6284AF),
       appBar: AppBar(
-        backgroundColor: Color(0xFF6FC78E),
-        title: Text("Yêu thích", style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color(0xFF6284AF),
+        title: const Text("Yêu thích", style: TextStyle(color: Colors.white)),
         centerTitle: true,
-        leading: BackButton(color: Colors.white),
+        automaticallyImplyLeading: false, // ❌ Không hiển thị nút quay lại
       ),
       body: Column(
         children: [
           Padding(
-            padding: EdgeInsets.all(12),
+            padding: const EdgeInsets.all(12),
             child: TextField(
               decoration: InputDecoration(
                 hintText: 'Tìm sản phẩm',
-                prefixIcon: Icon(Icons.search),
-                suffixIcon: Icon(Icons.tune),
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: const Icon(Icons.tune),
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
@@ -41,8 +40,8 @@ class FavoritePage extends StatelessWidget {
           ),
           Expanded(
             child: GridView.builder(
-              padding: EdgeInsets.all(12),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              padding: const EdgeInsets.all(12),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 childAspectRatio: 0.75,
                 crossAxisSpacing: 12,
@@ -88,7 +87,7 @@ class ProductCard extends StatelessWidget {
           Stack(
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                 child: product.imagePath.startsWith('http')
                     ? Image.network(
                   product.imagePath,
@@ -103,7 +102,7 @@ class ProductCard extends StatelessWidget {
                   fit: BoxFit.cover,
                 ),
               ),
-              Positioned(
+              const Positioned(
                 right: 6,
                 top: 6,
                 child: Icon(Icons.favorite, color: Colors.red),
@@ -111,13 +110,15 @@ class ProductCard extends StatelessWidget {
             ],
           ),
           Padding(
-            padding: EdgeInsets.all(8),
+            padding: const EdgeInsets.all(8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(product.name,
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                    overflow: TextOverflow.ellipsis),
+                Text(
+                  product.name,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
                 Row(
                   children: List.generate(
                     5,
@@ -130,23 +131,23 @@ class ProductCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   "${product.size}/${product.price.toStringAsFixed(0).replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (match) => ',')}đ",
-                  style: TextStyle(fontWeight: FontWeight.w500),
+                  style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
               ],
             ),
           ),
-          Spacer(),
+          const Spacer(),
           Align(
             alignment: Alignment.bottomRight,
             child: Padding(
-              padding: EdgeInsets.only(right: 8, bottom: 8),
+              padding: const EdgeInsets.only(right: 8, bottom: 8),
               child: CircleAvatar(
                 radius: 14,
                 backgroundColor: Colors.green,
-                child: Icon(Icons.add, color: Colors.white, size: 18),
+                child: const Icon(Icons.add, color: Colors.white, size: 18),
               ),
             ),
           )

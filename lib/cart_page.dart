@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'checkout_page.dart';
 
 class CartPage extends StatelessWidget {
@@ -8,198 +7,216 @@ class CartPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF6ED),
+      backgroundColor: const Color(0xFFF5F7FA),
       body: SafeArea(
         child: Column(
           children: [
-            // AppBar
+            // AppBar cố định (không có nút quay lại)
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-              decoration: const BoxDecoration(
-                color: Color(0xFF77C29F),
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-              ),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF6284AF),
+                    Color(0xFF8BA3C7),
+                    Color(0xFFB8C5D6),
+                  ],
+                  stops: [0.0, 0.6, 1.0],
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(30),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF6284AF).withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
                   ),
-                  const Expanded(
-                    child: Center(
-                      child: Text(
-                        'Giỏ hàng',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                ],
+              ),
+              child: const Center(
+                child: Text(
+                  'Giỏ hàng',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ),
+
+            // Nội dung cuộn
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: 3,
+                        itemBuilder: (context, index) {
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 8),
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: Image.asset(
+                                      'assets/images/pizza2.png',
+                                      width: 90,
+                                      height: 90,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: const [
+                                        Text("Pizza Dăm Bông Bắp",
+                                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                        Text("Pizza", style: TextStyle(color: Color(0xFF64748B))),
+                                        Text("12inch/305,000đ", style: TextStyle(color: Color(0xFF94A3B8))),
+                                      ],
+                                    ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      _QuantityButton(
+                                        icon: Icons.remove,
+                                        onPressed: () {
+                                          print('Giảm số lượng');
+                                        },
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(horizontal: 8),
+                                        child: Text("2",
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold, fontSize: 16)),
+                                      ),
+                                      _QuantityButton(
+                                        icon: Icons.add,
+                                        onPressed: () {
+                                          print('Tăng số lượng');
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                  IconButton(
+                                    onPressed: () {
+                                      print('Xóa sản phẩm');
+                                    },
+                                    icon: const Icon(Icons.close,
+                                        color: Color(0xFFE74C3C), size: 24),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 48), // Để giữ chữ ở giữa
-                ],
+                    const SizedBox(height: 100),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 8),
-
-            // Danh sách sản phẩm
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                itemCount: 3,
-                itemBuilder: (context, index) {
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Image.asset(
-                          'assets/images/pizza2.png',
-                          width: 80,
-                          height: 80,
-                          fit: BoxFit.cover,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text("Pizza Dăm Bông Bắp", style: TextStyle(fontWeight: FontWeight.bold)),
-                              Text("Pizza"),
-                              Text("12inch/305,000đ", style: TextStyle(color: Colors.grey)),
-                            ],
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            IconButton(
-                              onPressed: () {},
-                              icon: const Icon(Icons.remove),
-                            ),
-                            const Text("2", style: TextStyle(fontWeight: FontWeight.bold)),
-                            IconButton(
-                              onPressed: () {},
-                              icon: const Icon(Icons.add),
-                            ),
-                          ],
-                        ),
-                        IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.close, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            // Mã giảm giá và hóa đơn
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        const Expanded(
-                          child: TextField(
-                            decoration: InputDecoration(
-                              hintText: 'Nhập mã bạn có',
-                              border: InputBorder.none,
-                            ),
-                          ),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {},
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF77C29F),
-                          ),
-                          child: const Text("Nhập"),
-                        )
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: const [
-                        _InvoiceRow(label: "Tổng cộng", value: "1.830.000đ"),
-                        _InvoiceRow(label: "Phí giao hàng", value: "20.000đ"),
-                        _InvoiceRow(label: "Giảm giá", value: "0.000đ"),
-                        Divider(),
-                        _InvoiceRow(label: "Hóa đơn", value: "1.850.000đ", isTotal: true),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
 
             // Thanh toán
             Container(
-              color: const Color(0xFF77C29F),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF6284AF),
+                    Color(0xFF8BA3C7),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF6284AF).withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
               child: Row(
                 children: [
                   const Expanded(
                     child: Text(
                       "Thanh toán\n1.850.000đ",
-                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 18,
+                      ),
                     ),
                   ),
                   ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const CheckoutPage()),
-                        );
-                      },
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const CheckoutPage()),
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
-                      foregroundColor: Colors.green,
+                      foregroundColor: const Color(0xFF77C29F),
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
+                      elevation: 0,
                     ),
-                    child: const Text("Thanh toán"),
+                    child: const Text("Thanh toán", style: TextStyle(fontSize: 16)),
                   ),
                 ],
               ),
             ),
           ],
         ),
-      )
+      ),
     );
   }
 }
 
-class _InvoiceRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final bool isTotal;
+class _QuantityButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onPressed;
 
-  const _InvoiceRow({required this.label, required this.value, this.isTotal = false});
+  const _QuantityButton({required this.icon, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: TextStyle(fontWeight: isTotal ? FontWeight.bold : FontWeight.normal)),
-          Text(value, style: TextStyle(fontWeight: isTotal ? FontWeight.bold : FontWeight.normal)),
-        ],
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF6284AF).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFF6284AF).withOpacity(0.3), width: 1),
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: const Color(0xFF6284AF), size: 18),
+        onPressed: onPressed,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(),
       ),
     );
   }

@@ -1,6 +1,29 @@
 import 'package:flutter/material.dart';
 import 'user_detail.dart';
 
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Profile App',
+      theme: ThemeData(
+        primaryColor: const Color(0xFF6284AF),
+        scaffoldBackgroundColor: const Color(0xFFF5F7FA),
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: Color(0xFF2C3E50)),
+          bodyMedium: TextStyle(color: Color(0xFF64748B)),
+        ),
+      ),
+      home: const ProfilePage(),
+    );
+  }
+}
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -8,75 +31,243 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF6ED),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           child: Column(
             children: [
+              // Header với gradient mới và curves đẹp hơn
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF77C29F),
-                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-                ),
-                child: const Center(
-                  child: Text(
-                    'Hồ sơ',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24), // 👈 Giúp hạ nội dung xuống
-
-              CircleAvatar(
-                radius: 40,
-                backgroundColor: Colors.grey.shade300,
-                child: const Icon(Icons.person, size: 50, color: Colors.yellow),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                "Pizza",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const Text(
-                "pizza@gmail.com",
-                style: TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-              const SizedBox(height: 20),
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 24),
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.fromLTRB(24, 25, 24, 20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD5EDD5),
-                  borderRadius: BorderRadius.circular(12),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF6284AF),
+                      Color(0xFF8BA3C7),
+                      Color(0xFFB8C5D6),
+                    ],
+                    stops: [0.0, 0.6, 1.0],
+                  ),
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(50),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6284AF).withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: const [
-                    _TabItem(icon: Icons.receipt_long, label: "Hóa đơn"),
-                    _TabItem(icon: Icons.credit_card, label: "Phương thức\nthanh toán"),
-                    _TabItem(icon: Icons.location_on_outlined, label: "Địa chỉ"),
+                child: Column(
+                  children: [
+                    // Avatar với thiết kế mới
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 3,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 25,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.white,
+                              Colors.white.withOpacity(0.9),
+                            ],
+                          ),
+                        ),
+                        child: const CircleAvatar(
+                          radius: 70,
+                          backgroundColor: Colors.transparent,
+                          child: CircleAvatar(
+                            radius: 65,
+                            backgroundColor: Color(0xFFF0F4F8),
+                            child: Icon(
+                              Icons.person_rounded,
+                              size: 80,
+                              color: Color(0xFF6284AF),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Tên người dùng
+                    const Text(
+                      "Pizza",
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Email với container đẹp
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: const Text(
+                        "pizza@gmail.com",
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
-              _ProfileOption(
-                icon: Icons.person,
-                label: 'Chi tiết người dùng',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const UserDetailPage()),
-                  );
-                },
+
+              const SizedBox(height: 30),
+
+              // Quick Actions với thiết kế card mới
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(25),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6284AF).withOpacity(0.1),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Thao tác nhanh",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF6284AF),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: const [
+                        QuickActionItem(
+                          icon: Icons.receipt_long_rounded,
+                          label: "Hóa đơn",
+                          color: Color(0xFF6284AF),
+                        ),
+                        QuickActionItem(
+                          icon: Icons.credit_card_rounded,
+                          label: "Thanh toán",
+                          color: Color(0xFF8BA3C7),
+                        ),
+                        QuickActionItem(
+                          icon: Icons.location_on_rounded,
+                          label: "Địa chỉ",
+                          color: Color(0xFFB8C5D6),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-              const _ProfileOption(icon: Icons.settings, label: 'Cài đặt'),
-              const _ProfileOption(icon: Icons.help_outline, label: 'Trợ giúp?'),
-              const _ProfileOption(icon: Icons.language, label: 'Ngôn ngữ'),
-              const _ProfileOption(icon: Icons.logout, label: 'Đăng xuất'),
-              const SizedBox(height: 24), // thêm padding dưới nếu muốn
+
+              const SizedBox(height: 30),
+
+              // Profile Menu với thiết kế mới
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(25),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6284AF).withOpacity(0.1),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10),
+                    ProfileMenuItem(
+                      icon: Icons.person_rounded,
+                      label: 'Chi tiết người dùng',
+                      color: const Color(0xFF6284AF),
+                      onTap: () {
+                        print('Đã nhấn Chi tiết người dùng');
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const UserDetailPage(),
+                          ),
+                        );
+                      },
+                    ),
+                    const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                    const ProfileMenuItem(
+                      icon: Icons.settings_rounded,
+                      label: 'Cài đặt',
+                      color: Color(0xFF6284AF),
+                    ),
+                    const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                    const ProfileMenuItem(
+                      icon: Icons.help_outline_rounded,
+                      label: 'Trợ giúp',
+                      color: Color(0xFF6284AF),
+                    ),
+                    const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                    const ProfileMenuItem(
+                      icon: Icons.language_rounded,
+                      label: 'Ngôn ngữ',
+                      color: Color(0xFF6284AF),
+                    ),
+                    const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                    const ProfileMenuItem(
+                      icon: Icons.logout_rounded,
+                      label: 'Đăng xuất',
+                      color: Color(0xFFE74C3C),
+                      isLogout: true,
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -85,58 +276,126 @@ class ProfilePage extends StatelessWidget {
   }
 }
 
-class _TabItem extends StatelessWidget {
+class QuickActionItem extends StatelessWidget {
   final IconData icon;
   final String label;
+  final Color color;
 
-  const _TabItem({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, color: Colors.black54),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-}
-
-class _ProfileOption extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback? onTap;
-
-  const _ProfileOption({required this.icon, required this.label, this.onTap});
+  const QuickActionItem({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        // Thêm hành động khi nhấn
+      },
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 24),
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: color.withOpacity(0.2),
+            width: 1.5,
+          ),
         ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Icon(
+                icon,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ProfileMenuItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback? onTap;
+  final bool isLogout;
+
+  const ProfileMenuItem({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.color,
+    this.onTap,
+    this.isLogout = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(15),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFFD5EDD5),
-                borderRadius: BorderRadius.circular(8),
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, size: 20),
+              child: Icon(
+                icon,
+                size: 24,
+                color: color,
+              ),
             ),
             const SizedBox(width: 16),
-            Text(label, style: const TextStyle(fontSize: 16)),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: isLogout ? color : const Color(0xFF2C3E50),
+                ),
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 18,
+              color: const Color(0xFF94A3B8),
+            ),
           ],
         ),
       ),
