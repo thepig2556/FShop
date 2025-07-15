@@ -1,3 +1,5 @@
+import 'package:doan/address_selection_page.dart';
+import 'package:doan/profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -32,8 +34,6 @@ class _UserDetailPageState extends State<UserDetailPage> {
     try {
       final response = await http.get(
         Uri.parse('https://apitaofood.onrender.com/users/$userId'),
-        // Thêm header nếu API yêu cầu token (bỏ comment nếu cần)
-        // headers: {'Authorization': 'Bearer ${await FirebaseAuth.instance.currentUser?.getIdToken()}'},
       );
 
       if (response.statusCode == 200) {
@@ -115,7 +115,10 @@ class _UserDetailPageState extends State<UserDetailPage> {
                             size: 24,
                           ),
                           onPressed: () {
-                            Navigator.pop(context);
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (context) => ProfilePage()),
+                            );
                           },
                         ),
                       ),
@@ -226,22 +229,31 @@ class _UserDetailPageState extends State<UserDetailPage> {
                       title: 'Họ và tên',
                       icon: Icons.person,
                       value: userData?['name'] ?? 'Chưa có dữ liệu',
+                      showEdit: false,
                     ),
                     _UserInfoField(
                       title: 'Email',
                       icon: Icons.email,
                       value: userData?['email'] ?? 'Chưa có dữ liệu',
+                      showEdit: false,
                     ),
                     _UserInfoField(
                       title: 'Số điện thoại',
                       icon: Icons.phone,
                       value: userData?['phone'] ?? 'Chưa có dữ liệu',
+                      showEdit: false,
                     ),
                     _UserInfoField(
                       title: 'Địa chỉ',
                       icon: Icons.location_on,
                       value: userData?['address'] ?? 'Chưa có dữ liệu',
                       isMultiline: true,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => LocationSelectionScreen()),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -260,12 +272,16 @@ class _UserInfoField extends StatelessWidget {
   final IconData icon;
   final String value;
   final bool isMultiline;
+  final bool showEdit;
+  final VoidCallback? onTap;
 
   const _UserInfoField({
     required this.title,
     required this.icon,
     required this.value,
     this.isMultiline = false,
+    this.showEdit = true,
+    this.onTap,
   });
 
   @override
@@ -285,6 +301,7 @@ class _UserInfoField extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           InkWell(
+            onTap: onTap,
             borderRadius: BorderRadius.circular(12),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -329,11 +346,12 @@ class _UserInfoField extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const Icon(
-                    Icons.edit,
-                    size: 18,
-                    color: Color(0xFF94A3B8),
-                  ),
+                  if (showEdit)
+                    const Icon(
+                      Icons.edit,
+                      size: 18,
+                      color: Color(0xFF94A3B8),
+                    ),
                 ],
               ),
             ),
