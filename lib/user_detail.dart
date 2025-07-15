@@ -1,21 +1,71 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class UserDetailPage extends StatelessWidget {
+class UserDetailPage extends StatefulWidget {
   const UserDetailPage({super.key});
+
+  @override
+  _UserDetailPageState createState() => _UserDetailPageState();
+}
+
+class _UserDetailPageState extends State<UserDetailPage> {
+  Map<String, dynamic>? userData;
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserData();
+  }
+
+  Future<void> fetchUserData() async {
+    String? userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) {
+      setState(() {
+        errorMessage = 'Không tìm thấy người dùng';
+      });
+      return;
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse('https://apitaofood.onrender.com/users/$userId'),
+        // Thêm header nếu API yêu cầu token (bỏ comment nếu cần)
+        // headers: {'Authorization': 'Bearer ${await FirebaseAuth.instance.currentUser?.getIdToken()}'},
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          userData = jsonDecode(response.body);
+        });
+      } else {
+        setState(() {
+          errorMessage = 'Không thể tải dữ liệu người dùng: ${response.statusCode}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Lỗi kết nối đến API: $e';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: errorMessage != null
+            ? Center(child: Text(errorMessage!))
+            : SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Column(
             children: [
-              // Header với gradient và nút quay lại
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(25, 15, 24, 15),
+                padding: const EdgeInsets.fromLTRB(24, 25, 24, 20),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
@@ -40,7 +90,6 @@ class UserDetailPage extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    // Nút quay lại
                     Align(
                       alignment: Alignment.topLeft,
                       child: Container(
@@ -66,14 +115,12 @@ class UserDetailPage extends StatelessWidget {
                             size: 24,
                           ),
                           onPressed: () {
-                            print('Đã nhấn nút quay lại');
-                            Navigator.pop(context); // Quay lại ProfilePage
+                            Navigator.pop(context);
                           },
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    // Avatar
+                    const SizedBox(height: 0),
                     Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
@@ -89,32 +136,76 @@ class UserDetailPage extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: const CircleAvatar(
-                        radius: 65,
-                        backgroundColor: Color(0xFFF0F4F8),
-                        child: Icon(
-                          Icons.person_rounded,
-                          size: 80,
-                          color: Color(0xFF6284AF),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.white,
+                              Colors.white.withOpacity(0.9),
+                            ],
+                          ),
+                        ),
+                        child: CircleAvatar(
+                          radius: 70,
+                          backgroundColor: Colors.transparent,
+                          child: CircleAvatar(
+                            radius: 65,
+                            backgroundColor: const Color(0xFFF0F4F8),
+                            backgroundImage: userData?['avatar'] != null
+                                ? NetworkImage(userData!['avatar'] as String)
+                                : null,
+                            child: userData?['avatar'] == null
+                                ? const Icon(
+                              Icons.person_rounded,
+                              size: 100,
+                              color: Color(0xFF6284AF),
+                            )
+                                : null,
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    // Tên người dùng
-                    const Text(
-                      "Pizza",
-                      style: TextStyle(
-                        fontSize: 28,
+                    const SizedBox(height: 10),
+                    Text(
+                      userData?['name'] ?? 'Chưa có dữ liệu',
+                      style: const TextStyle(
+                        fontSize: 35,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                         letterSpacing: 0.5,
                       ),
                     ),
+                    const SizedBox(height: 0),
+                    // Email
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        userData?['email'] ?? 'Chưa có dữ liệu',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 30),
-              // Các trường thông tin
+              const SizedBox(height: 20),
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 padding: const EdgeInsets.all(20),
@@ -129,27 +220,27 @@ class UserDetailPage extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Column(
+                child: Column(
                   children: [
                     _UserInfoField(
                       title: 'Họ và tên',
                       icon: Icons.person,
-                      value: 'Pizza',
+                      value: userData?['name'] ?? 'Chưa có dữ liệu',
                     ),
                     _UserInfoField(
                       title: 'Email',
                       icon: Icons.email,
-                      value: 'pizza@gmail.com',
+                      value: userData?['email'] ?? 'Chưa có dữ liệu',
                     ),
                     _UserInfoField(
                       title: 'Số điện thoại',
                       icon: Icons.phone,
-                      value: 'xxx.xxx.xxx',
+                      value: userData?['phone'] ?? 'Chưa có dữ liệu',
                     ),
                     _UserInfoField(
                       title: 'Địa chỉ',
                       icon: Icons.location_on,
-                      value: 'Nhà số 555, Việt Nam\nNinh Bình, Tây Ninh',
+                      value: userData?['address'] ?? 'Chưa có dữ liệu',
                       isMultiline: true,
                     ),
                   ],
@@ -188,42 +279,12 @@ class _UserInfoField extends StatelessWidget {
             title,
             style: const TextStyle(
               fontWeight: FontWeight.bold,
-              fontSize: 16,
+              fontSize: 20,
               color: Color(0xFF2C3E50),
             ),
           ),
           const SizedBox(height: 6),
           InkWell(
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: Text('Chỉnh sửa $title'),
-                  content: TextField(
-                    decoration: InputDecoration(
-                      labelText: title,
-                      hintText: value,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    maxLines: isMultiline ? 3 : 1,
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Hủy', style: TextStyle(color: Color(0xFF6284AF))),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text('Lưu', style: TextStyle(color: Color(0xFF6284AF))),
-                    ),
-                  ],
-                ),
-              );
-            },
             borderRadius: BorderRadius.circular(12),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -262,7 +323,8 @@ class _UserInfoField extends StatelessWidget {
                     child: Text(
                       value,
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                         color: Color(0xFF2C3E50),
                       ),
                     ),

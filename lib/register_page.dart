@@ -1,6 +1,8 @@
 import 'package:doan/login_form_page.dart';
-import 'package:doan/main.dart' as main; // Import MainScreen từ main.dart
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -19,8 +21,11 @@ class _RegisterPageState extends State<RegisterPage> {
   final _phoneController = TextEditingController();
 
   String _selectedGender = 'Nam';
-  bool _obscureText = true; // State để ẩn/hiện mật khẩu
-  bool _obscureConfirmText = true; // State để ẩn/hiện xác nhận mật khẩu
+  bool _obscureText = true;
+  bool _obscureConfirmText = true;
+  bool _isLoading = false;
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   void dispose() {
@@ -33,10 +38,98 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
+  Future<void> _register() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+
+        String avatarUrl;
+        switch (_selectedGender) {
+          case 'Nam':
+            avatarUrl = 'https://firebasestorage.googleapis.com/v0/b/tousehao.appspot.com/o/avt.png?alt=media&token=d4b325e8-c4f1-49e3-8438-3f980dd4a4bf';
+            break;
+          case 'Nữ':
+            avatarUrl = 'https://firebasestorage.googleapis.com/v0/b/tousehao.appspot.com/o/avt.png?alt=media&token=d4b325e8-c4f1-49e3-8438-3f980dd4a4bf';
+            break;
+          default:
+            avatarUrl = 'https://firebasestorage.googleapis.com/v0/b/tousehao.appspot.com/o/avt.png?alt=media&token=d4b325e8-c4f1-49e3-8438-3f980dd4a4bf';
+        }
+
+        // Prepare data for API
+        final userData = {
+          'id': userCredential.user!.uid,
+          'name': _nameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'password': _passwordController.text.trim(),
+          'dob': _dobController.text.trim(),
+          'phone': _phoneController.text.trim(),
+          'gender': _selectedGender,
+          'address': '',
+          'role': 'Customer',
+          'avatar': avatarUrl,
+        };
+
+        final response = await http.post(
+          Uri.parse('https://apitaofood.onrender.com/Users'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(userData),
+        );
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          await userCredential.user!.sendEmailVerification();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Đăng ký thành công! Vui lòng kiểm tra email để xác nhận.')),
+          );
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginFormPage()),
+          );
+        } else {
+          throw Exception('Đã có lỗi xảy ra khi gọi API');
+        }
+      } on FirebaseAuthException catch (e) {
+        String message;
+        switch (e.code) {
+          case 'email-already-in-use':
+            message = 'Email đã được sử dụng';
+            break;
+          case 'invalid-email':
+            message = 'Email không hợp lệ';
+            break;
+          case 'weak-password':
+            message = 'Mật khẩu quá yếu';
+            break;
+          default:
+            message = 'Đã có lỗi xảy ra, vui lòng thử lại';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã có lỗi xảy ra, vui lòng thử lại')),
+        );
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF2E4057), // Màu xanh navy nhẹ
+      backgroundColor: const Color(0xFF2E4057),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -48,7 +141,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 'Đăng ký',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Color(0xFFF8F9FA), // Màu trắng kem
+                  color: Color(0xFFF8F9FA),
                   fontSize: 42,
                   fontWeight: FontWeight.bold,
                 ),
@@ -58,7 +151,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 'Đã có thêm nhiều lợi ích, hãy đăng ký tài khoản của bạn bằng cách điền một số thông tin',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Color(0xFFD5DBDB), // Màu xám nhẹ
+                  color: Color(0xFFD5DBDB),
                   fontSize: 21,
                   fontWeight: FontWeight.w500,
                   height: 1.4,
@@ -68,7 +161,7 @@ class _RegisterPageState extends State<RegisterPage> {
               Container(
                 padding: const EdgeInsets.all(25),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8F9FA), // Màu trắng kem
+                  color: const Color(0xFFF8F9FA),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
@@ -122,7 +215,7 @@ class _RegisterPageState extends State<RegisterPage> {
       child: Text(
         label,
         style: const TextStyle(
-          color: Color(0xFF2E4057), // Màu xanh navy
+          color: Color(0xFF2E4057),
           fontSize: 18,
           fontWeight: FontWeight.w600,
         ),
@@ -202,7 +295,13 @@ class _RegisterPageState extends State<RegisterPage> {
           borderSide: const BorderSide(color: Color(0xFF1565C0), width: 2),
         ),
       ),
-      validator: (value) => value!.isEmpty ? 'Vui lòng nhập email' : null,
+      validator: (value) {
+        if (value!.isEmpty) return 'Vui lòng nhập email';
+        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+          return 'Email không hợp lệ';
+        }
+        return null;
+      },
     );
   }
 
@@ -253,7 +352,11 @@ class _RegisterPageState extends State<RegisterPage> {
           borderSide: const BorderSide(color: Color(0xFFC62828), width: 2),
         ),
       ),
-      validator: (value) => value!.isEmpty ? 'Vui lòng nhập mật khẩu' : null,
+      validator: (value) {
+        if (value!.isEmpty) return 'Vui lòng nhập mật khẩu';
+        if (value.length < 6) return 'Mật khẩu phải có ít nhất 6 ký tự';
+        return null;
+      },
     );
   }
 
@@ -413,7 +516,13 @@ class _RegisterPageState extends State<RegisterPage> {
           borderSide: const BorderSide(color: Color(0xFFD84315), width: 2),
         ),
       ),
-      validator: (value) => value!.isEmpty ? 'Vui lòng nhập số điện thoại' : null,
+      validator: (value) {
+        if (value!.isEmpty) return 'Vui lòng nhập số điện thoại';
+        if (!RegExp(r'^\+?\d{9,12}$').hasMatch(value)) {
+          return 'Số điện thoại không hợp lệ';
+        }
+        return null;
+      },
     );
   }
 
@@ -434,8 +543,8 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget _buildGenderOption(String gender, IconData icon) {
     bool isSelected = _selectedGender == gender;
     Color iconColor = Colors.black;
-    if (gender == 'Nam' && isSelected) iconColor = const Color(0xFF1565C0); // Xanh dương
-    if (gender == 'Nữ' && isSelected) iconColor = const Color(0xFFEC407A); // Hồng
+    if (gender == 'Nam' && isSelected) iconColor = const Color(0xFF1565C0);
+    if (gender == 'Nữ' && isSelected) iconColor = const Color(0xFFEC407A);
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -477,25 +586,20 @@ class _RegisterPageState extends State<RegisterPage> {
 
   Widget _buildRegisterButton(BuildContext context) {
     return SizedBox(
-      height: 56, // Tăng chiều cao cho dễ bấm
+      height: 56,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF1B5E20), // Màu xanh lá đậm
+          backgroundColor: const Color(0xFF1B5E20),
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           elevation: 3,
         ),
-        onPressed: () {
-          if (_formKey.currentState!.validate()) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const LoginFormPage()),
-            );
-          }
-        },
-        child: const Text(
+        onPressed: _isLoading ? null : _register,
+        child: _isLoading
+            ? const CircularProgressIndicator(color: Colors.white)
+            : const Text(
           'Đăng ký',
           style: TextStyle(
             fontSize: 20,

@@ -264,11 +264,6 @@ class LoginPage extends StatelessWidget {
     context,
     MaterialPageRoute(builder: (_) => const loginForm.LoginFormPage()),
   );
-
-  void _navToMain(BuildContext context) => Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(builder: (_) => const MainScreen()),
-  );
 }
 
 class _PizzaLogo extends StatelessWidget {

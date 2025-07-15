@@ -1,4 +1,8 @@
+import 'package:doan/login_form_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'user_detail.dart';
 
 void main() {
@@ -25,19 +29,76 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  String userName = "Pizza"; // Giá trị mặc định
+  String userEmail = "pizza@gmail.com"; // Giá trị mặc định
+  String? avatarUrl; // URL ảnh đại diện
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    String? userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) {
+      setState(() {
+        errorMessage = 'Không tìm thấy người dùng';
+      });
+      return;
+    }
+
+    final url = Uri.parse('https://apitaofood.onrender.com/users/$userId');
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          userName = data['name'] ?? "Pizza";
+          userEmail = data['email'] ?? "pizza@gmail.com";
+          avatarUrl = data['avatar'];
+        });
+      } else {
+        setState(() {
+          errorMessage = 'Không thể tải dữ liệu người dùng';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể tải dữ liệu người dùng')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Lỗi kết nối đến API';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lỗi kết nối đến API')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
+      body: errorMessage != null
+          ? Center(child: Text(errorMessage!))
+          : SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Column(
             children: [
-              // Header với gradient mới và curves đẹp hơn
+              // Header với gradient
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.fromLTRB(24, 25, 24, 20),
@@ -65,7 +126,7 @@ class ProfilePage extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    // Avatar với thiết kế mới
+                    // Avatar
                     Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
@@ -93,38 +154,37 @@ class ProfilePage extends StatelessWidget {
                             ],
                           ),
                         ),
-                        child: const CircleAvatar(
+                        child: CircleAvatar(
                           radius: 70,
                           backgroundColor: Colors.transparent,
                           child: CircleAvatar(
                             radius: 65,
-                            backgroundColor: Color(0xFFF0F4F8),
-                            child: Icon(
+                            backgroundColor: const Color(0xFFF0F4F8),
+                            backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
+                            child: avatarUrl == null
+                                ? const Icon(
                               Icons.person_rounded,
                               size: 80,
                               color: Color(0xFF6284AF),
-                            ),
+                            )
+                                : null,
                           ),
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 20),
-
                     // Tên người dùng
-                    const Text(
-                      "Pizza",
-                      style: TextStyle(
+                    Text(
+                      userName,
+                      style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                         letterSpacing: 0.5,
                       ),
                     ),
-
                     const SizedBox(height: 8),
-
-                    // Email với container đẹp
+                    // Email
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -138,9 +198,9 @@ class ProfilePage extends StatelessWidget {
                           width: 1,
                         ),
                       ),
-                      child: const Text(
-                        "pizza@gmail.com",
-                        style: TextStyle(
+                      child: Text(
+                        userEmail,
+                        style: const TextStyle(
                           fontSize: 16,
                           color: Colors.white,
                           fontWeight: FontWeight.w500,
@@ -150,10 +210,7 @@ class ProfilePage extends StatelessWidget {
                   ],
                 ),
               ),
-
               const SizedBox(height: 30),
-
-              // Quick Actions với thiết kế card mới
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 padding: const EdgeInsets.all(20),
@@ -203,10 +260,8 @@ class ProfilePage extends StatelessWidget {
                   ],
                 ),
               ),
-
               const SizedBox(height: 30),
-
-              // Profile Menu với thiết kế mới
+              // Profile Menu
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 decoration: BoxDecoration(
@@ -228,7 +283,6 @@ class ProfilePage extends StatelessWidget {
                       label: 'Chi tiết người dùng',
                       color: const Color(0xFF6284AF),
                       onTap: () {
-                        print('Đã nhấn Chi tiết người dùng');
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -256,17 +310,23 @@ class ProfilePage extends StatelessWidget {
                       color: Color(0xFF6284AF),
                     ),
                     const Divider(height: 1, color: Color(0xFFE2E8F0)),
-                    const ProfileMenuItem(
+                    ProfileMenuItem(
                       icon: Icons.logout_rounded,
                       label: 'Đăng xuất',
                       color: Color(0xFFE74C3C),
                       isLogout: true,
+                      onTap: () async{
+                        await FirebaseAuth.instance.signOut();
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => LoginFormPage()),
+                        );
+                      },
                     ),
                     const SizedBox(height: 10),
                   ],
                 ),
               ),
-
               const SizedBox(height: 40),
             ],
           ),

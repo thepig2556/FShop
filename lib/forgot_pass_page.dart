@@ -1,5 +1,10 @@
 import 'package:doan/login_form_page.dart';
 import 'package:flutter/material.dart';
+import 'package:email_auth/email_auth.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:math';
+
 
 // Form mới cho đặt lại mật khẩu
 class ResetPasswordPage extends StatefulWidget {
@@ -7,17 +12,19 @@ class ResetPasswordPage extends StatefulWidget {
 
   @override
   State<ResetPasswordPage> createState() => _ResetPasswordPageState();
+
 }
 
 class _ResetPasswordPageState extends State<ResetPasswordPage> {
+
   final _formKey = GlobalKey<FormState>();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _isButtonEnabled = false;
 
-  // Trạng thái kiểm tra tiêu chí
   bool _lengthCriteriaMet = false;
   bool _typeCriteriaMet = false;
   bool _matchCriteriaMet = false;
@@ -370,6 +377,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _otpController = TextEditingController();
   bool _isCodeRequested = false;
   bool _isLoading = false;
+  String? _generatedOtp;
 
   @override
   void dispose() {
@@ -378,73 +386,67 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     super.dispose();
   }
 
+  Future<bool> sendEmailOtp(String email, String otp) async {
+    const serviceId = 'service_znv85sy';
+    const templateId = 'template_0a58sd7';
+    const publicKey = 'eKvpauKeAjKB2J_ro';
+
+    final url = Uri.parse('https://api.emailjs.com/api/v1.0/email/send');
+    final response = await http.post(
+      url,
+      headers: {
+        'origin': 'http://localhost',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        'service_id': serviceId,
+        'template_id': templateId,
+        'user_id': publicKey,
+        'template_params': {
+          'to_email': email,
+          'otp': otp,
+          'time': DateTime.now().toString(),
+        },
+      }),
+    );
+
+    print(response.statusCode);
+    print(response.body);
+
+    return response.statusCode == 200;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF2E4057), // Màu xanh navy nhẹ giống trang đăng nhập
+      backgroundColor: const Color(0xFF2E4057),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 0),
+              const SizedBox(height: 20),
               const Text(
                 'Quên mật khẩu',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Color(0xFFF8F9FA), // Màu trắng kem
-                  fontSize: 50,
+                  color: Color(0xFFF8F9FA),
+                  fontSize: 32,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 5),
               const Text(
-                'Vui lòng nhập tài khoản\ncần tìm lại mật khẩu',
+                'Vui lòng nhập email để nhận mã xác minh',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Color(0xFFD5DBDB), // Màu xám nhẹ
-                  fontSize: 25,
-                  fontWeight: FontWeight.w500,
-                  height: 1.4,
+                  color: Color(0xFFD5DBDB),
+                  fontSize: 18,
                 ),
               ),
-              const SizedBox(height: 10),
-              _buildPizzaLogo(),
-              const SizedBox(height: 30),
-              Container(
-                padding: const EdgeInsets.all(25),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8F9FA), // Màu trắng kem
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildFieldLabel('Email'),
-                      _buildEmailField(),
-                      if (_isCodeRequested) ...[
-                        const SizedBox(height: 25),
-                        _buildFieldLabel('Mã xác nhận'),
-                        _buildOTPField(),
-                      ],
-                      const SizedBox(height: 25),
-                      _buildVerifyButton(context),
-                      const SizedBox(height: 15),
-                      _buildBackLink(context),
-                    ],
-                  ),
-                ),
-              ),
+              const SizedBox(height: 20),
+              _buildForm(),
             ],
           ),
         ),
@@ -452,17 +454,35 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     );
   }
 
-  Widget _buildPizzaLogo() {
-    return Center(
-      child: Container(
-        width: 120,
-        height: 120,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Image.asset(
-            'assets/images/logo1.png',
-            fit: BoxFit.cover,
+  Widget _buildForm() {
+    return Container(
+      padding: const EdgeInsets.all(25),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
+        ],
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildFieldLabel('Email'),
+            _buildEmailField(),
+            if (_isCodeRequested) ...[
+              const SizedBox(height: 25),
+              _buildFieldLabel('Mã xác nhận'),
+              _buildOTPField(),
+            ],
+            const SizedBox(height: 25),
+            _buildVerifyButton(),
+          ],
         ),
       ),
     );
@@ -474,7 +494,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       child: Text(
         label,
         style: const TextStyle(
-          color: Color(0xFF2E4057), // Màu xanh navy
+          color: Color(0xFF2E4057),
           fontSize: 18,
           fontWeight: FontWeight.w600,
         ),
@@ -488,42 +508,24 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         Expanded(
           child: TextFormField(
             controller: _emailController,
-            style: const TextStyle(
-              fontSize: 18,
-              color: Color(0xFF2E4057),
-            ),
+            style: const TextStyle(fontSize: 18, color: Color(0xFF2E4057)),
             decoration: InputDecoration(
               labelText: 'Nhập email của bạn',
-              labelStyle: const TextStyle(
-                color: Color(0xFF5D6D7E),
-                fontSize: 16,
-              ),
-              prefixIcon: const Icon(
-                Icons.email,
-                color: Color(0xFF1565C0),
-                size: 24,
-              ),
+              prefixIcon: const Icon(Icons.email, color: Color(0xFF1565C0)),
               filled: true,
               fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+              contentPadding:
+              const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF1565C0), width: 2),
               ),
             ),
-            validator: (value) => value!.isEmpty ? 'Vui lòng nhập email' : null,
+            validator: (value) =>
+            value!.isEmpty ? 'Vui lòng nhập email' : null,
           ),
         ),
         const SizedBox(width: 12),
-        Container(
+        SizedBox(
           height: 56,
           width: 56,
           child: ElevatedButton(
@@ -531,24 +533,32 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 ? null
                 : () async {
               if (_formKey.currentState!.validate()) {
-                setState(() {
-                  _isLoading = true;
-                });
-                await Future.delayed(const Duration(seconds: 3));
+                setState(() => _isLoading = true);
+                final email = _emailController.text.trim();
+                final otp =
+                (Random().nextInt(900000) + 100000).toString();
+                _generatedOtp = otp;
+
+                final success = await sendEmailOtp(email, otp);
                 setState(() {
                   _isLoading = false;
-                  _isCodeRequested = true;
+                  _isCodeRequested = success;
                 });
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(success
+                        ? 'Đã gửi mã xác nhận tới email.'
+                        : 'Không gửi được mã xác nhận.'),
+                  ),
+                );
               }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF1B5E20),
-              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              elevation: 3,
-              padding: EdgeInsets.zero,
             ),
             child: _isLoading
                 ? const SizedBox(
@@ -569,81 +579,46 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   Widget _buildOTPField() {
     return TextFormField(
       controller: _otpController,
-      style: const TextStyle(
-        fontSize: 18,
-        color: Color(0xFF2E4057),
-      ),
+      style: const TextStyle(fontSize: 18, color: Color(0xFF2E4057)),
       decoration: InputDecoration(
         labelText: 'Nhập mã xác nhận',
-        labelStyle: const TextStyle(
-          color: Color(0xFF5D6D7E),
-          fontSize: 16,
-        ),
-        prefixIcon: const Icon(
-          Icons.lock,
-          color: Color(0xFFC62828),
-          size: 24,
-        ),
+        prefixIcon: const Icon(Icons.lock, color: Color(0xFFC62828)),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        contentPadding:
+        const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFC62828), width: 2),
         ),
       ),
     );
   }
 
-  Widget _buildVerifyButton(BuildContext context) {
+  Widget _buildVerifyButton() {
     return SizedBox(
       height: 56,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF1B5E20), // Màu xanh lá đậm
-          foregroundColor: Colors.white,
+          backgroundColor: const Color(0xFF1B5E20),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          elevation: 3,
         ),
         onPressed: () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const ResetPasswordPage()),
-          );
+          if (_otpController.text.trim() == _generatedOtp) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const ResetPasswordPage()),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Mã OTP không đúng')),
+            );
+          }
         },
         child: const Text(
           'Xác minh',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBackLink(BuildContext context) {
-    return TextButton(
-      onPressed: () => Navigator.pop(context),
-      style: TextButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-      ),
-      child: const Text(
-        'Quay lại',
-        style: TextStyle(
-          color: Color(0xFF1B5E20),
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
         ),
       ),
     );

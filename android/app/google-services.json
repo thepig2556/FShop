@@ -1,0 +1,155 @@
+{
+  "project_info": {
+    "project_number": "125370925108",
+    "firebase_url": "https://tousehao-default-rtdb.firebaseio.com",
+    "project_id": "tousehao",
+    "storage_bucket": "tousehao.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:125370925108:android:77290396aa93aa0b12ca61",
+        "android_client_info": {
+          "package_name": "com.example.chatapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "125370925108-jfnb23d71l2oonv9296rhoq3rm2jo597.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzwUH2qEaepYvFAtS9j8tEE_xzNmuVk9k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "125370925108-jfnb23d71l2oonv9296rhoq3rm2jo597.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "125370925108-273hfpqsg9d8fg626hh1587a9qid8hni.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.toodFaoPremium"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:125370925108:android:a067b9eca31eaabe12ca61",
+        "android_client_info": {
+          "package_name": "com.example.doan"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "125370925108-jfnb23d71l2oonv9296rhoq3rm2jo597.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzwUH2qEaepYvFAtS9j8tEE_xzNmuVk9k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "125370925108-jfnb23d71l2oonv9296rhoq3rm2jo597.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "125370925108-273hfpqsg9d8fg626hh1587a9qid8hni.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.toodFaoPremium"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:125370925108:android:7e56458587b9a8cc12ca61",
+        "android_client_info": {
+          "package_name": "com.example.tinkdrao"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "125370925108-jfnb23d71l2oonv9296rhoq3rm2jo597.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzwUH2qEaepYvFAtS9j8tEE_xzNmuVk9k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "125370925108-jfnb23d71l2oonv9296rhoq3rm2jo597.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "125370925108-273hfpqsg9d8fg626hh1587a9qid8hni.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.toodFaoPremium"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:125370925108:android:2a599d4a7cc5f21612ca61",
+        "android_client_info": {
+          "package_name": "com.example.tousehao"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "125370925108-jfnb23d71l2oonv9296rhoq3rm2jo597.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzwUH2qEaepYvFAtS9j8tEE_xzNmuVk9k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "125370925108-jfnb23d71l2oonv9296rhoq3rm2jo597.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "125370925108-273hfpqsg9d8fg626hh1587a9qid8hni.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.toodFaoPremium"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

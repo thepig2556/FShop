@@ -1,8 +1,12 @@
+import 'package:doan/favorite_page.dart';
 import 'package:doan/forgot_pass_page.dart';
-import 'package:doan/main.dart' as main; // Import MainScreen từ main.dart
+import 'package:doan/main.dart' as main;
 import 'package:doan/register_page.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'login_page.dart';
+
+import 'package:doan/home_page.dart';
 
 class LoginFormPage extends StatefulWidget {
   const LoginFormPage({super.key});
@@ -24,10 +28,57 @@ class _LoginFormPageState extends State<LoginFormPage> {
     super.dispose();
   }
 
+  Future<void> _login() async {
+    if (_formKey.currentState!.validate()) {
+      try {
+        UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+
+        if (userCredential.user!.emailVerified) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const main.MainScreen()),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Vui lòng xác nhận email của bạn trước khi đăng nhập!'),
+            ),
+          );
+          await userCredential.user!.sendEmailVerification();
+        }
+      } on FirebaseAuthException catch (e) {
+        String message;
+        switch (e.code) {
+          case 'user-not-found':
+            message = 'Email không tồn tại';
+            break;
+          case 'wrong-password':
+            message = 'Mật khẩu không đúng';
+            break;
+          case 'invalid-email':
+            message = 'Email không hợp lệ';
+            break;
+          default:
+            message = 'Đã có lỗi xảy ra, vui lòng thử lại';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã có lỗi xảy ra, vui lòng thử lại')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF2E4057), // Màu xanh navy nhẹ
+      backgroundColor: const Color(0xFF2E4057),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -39,7 +90,7 @@ class _LoginFormPageState extends State<LoginFormPage> {
                 'Đăng nhập',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Color(0xFFF8F9FA), // Màu trắng kem
+                  color: Color(0xFFF8F9FA),
                   fontSize: 50,
                   fontWeight: FontWeight.bold,
                 ),
@@ -49,7 +100,7 @@ class _LoginFormPageState extends State<LoginFormPage> {
                 'Đặt món dễ dàng\nGiao hàng nhanh chóng',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Color(0xFFD5DBDB), // Màu xám nhẹ
+                  color: Color(0xFFD5DBDB),
                   fontSize: 25,
                   fontWeight: FontWeight.w500,
                   height: 1.4,
@@ -61,7 +112,7 @@ class _LoginFormPageState extends State<LoginFormPage> {
               Container(
                 padding: const EdgeInsets.all(25),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8F9FA), // Màu trắng kem
+                  color: const Color(0xFFF8F9FA),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
@@ -120,7 +171,7 @@ class _LoginFormPageState extends State<LoginFormPage> {
       child: Text(
         label,
         style: const TextStyle(
-          color: Color(0xFF2E4057), // Màu xanh navy
+          color: Color(0xFF2E4057),
           fontSize: 18,
           fontWeight: FontWeight.w600,
         ),
@@ -162,7 +213,13 @@ class _LoginFormPageState extends State<LoginFormPage> {
           borderSide: const BorderSide(color: Color(0xFF1565C0), width: 2),
         ),
       ),
-      validator: (value) => value!.isEmpty ? 'Vui lòng nhập email' : null,
+      validator: (value) {
+        if (value!.isEmpty) return 'Vui lòng nhập email';
+        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+          return 'Email không hợp lệ';
+        }
+        return null;
+      },
     );
   }
 
@@ -222,18 +279,14 @@ class _LoginFormPageState extends State<LoginFormPage> {
       height: 56,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF1B5E20), // Màu xanh lá đậm
+          backgroundColor: const Color(0xFF1B5E20),
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           elevation: 3,
         ),
-        onPressed: () {
-          if (_formKey.currentState!.validate()) {
-            _navToMain(context);
-          }
-        },
+        onPressed: _login,
         child: const Text(
           'Đăng nhập',
           style: TextStyle(
@@ -299,7 +352,4 @@ class _LoginFormPageState extends State<LoginFormPage> {
       ),
     );
   }
-
-  void _navToMain(BuildContext context) =>
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const main.MainScreen()));
 }
