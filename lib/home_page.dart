@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'product_detail_page.dart';
+
+// Bản ánh xạ category từ int sang tên hiển thị
+const Map<int, String> categoryMap = {
+  0: 'Pizza',
+  1: 'Kem',
+  2: 'Nước có ga',
+  3: 'Cafe',
+};
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,59 +21,80 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController _searchController = TextEditingController();
-
-  List<Map<String, dynamic>> allProducts = [
-    {
-      'name': 'Pizza Dăm Bông Bắp',
-      'rate': 4.5,
-      'price': '305,000đ',
-      'priceNumber': 305000,
-      'size': '12inch',
-      'image': 'pizza1.png',
-      'category': 'Pizza',
-      'description': 'Pizza thơm ngon với topping dăm bông bắp tươi, phô mai mozzarella béo ngậy trên nền bánh mỏng giòn.',
-    },
-    {
-      'name': 'Vanilla Ice Cream',
-      'rate': 4.2,
-      'price': '50,000đ',
-      'priceNumber': 50000,
-      'size': 'Small',
-      'image': 'icecream1.png',
-      'category': 'Kem',
-      'description': 'Kem vani mịn màng, ngọt ngào với hương vị vani tự nhiên, hoàn hảo cho mùa hè.',
-    },
-    {
-      'name': 'Coca Cola',
-      'rate': 4.0,
-      'price': '20,000đ',
-      'priceNumber': 20000,
-      'size': '500ml',
-      'image': 'cola1.png',
-      'category': 'Nước có ga',
-      'description': 'Nước ngọt có ga Coca Cola classic, mang đến cảm giác sảng khoái và tươi mát.',
-    },
-    {
-      'name': 'Pepsi',
-      'rate': 4.1,
-      'price': '20,000đ',
-      'priceNumber': 20000,
-      'size': '500ml',
-      'image': 'pepsi1.png',
-      'category': 'Nước có ga',
-      'description': 'Nước ngọt có ga Pepsi với hương vị độc đáo, tạo nên trải nghiệm thú vị.',
-    },
-  ];
-
+  List<Map<String, dynamic>> allProducts = [];
   List<Map<String, dynamic>> filteredProducts = [];
   Set<String> favoriteProducts = {};
   List<String> cart = [];
-  String selectedCategory = 'Pizza';
+  int selectedCategory = 0; // Sử dụng int thay vì String
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _filterProducts();
+    _fetchProducts();
+  }
+
+  Future<void> _fetchProducts() async {
+    try {
+      final response = await http.get(Uri.parse('https://apitaofood.onrender.com/foods'));
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        print('Decoded data length: ${data.length}');
+        if (data.isEmpty) {
+          print('Warning: API returned empty data');
+        }
+        setState(() {
+          allProducts = data.map((item) {
+            print('Raw item: $item');
+            int categoryValue = 0; // Giá trị mặc định
+            try {
+              if (item['category'] != null) {
+                final categoryStr = item['category'].toString();
+                categoryValue = int.parse(categoryStr); // Chuyển đổi String sang int
+              }
+            } catch (e) {
+              print('Error parsing category: $e, using default 0');
+            }
+            print('Processed category: $categoryValue');
+            final image = item['image'] ?? 'default.png';
+            print('Processed image: $image');
+            return {
+              'name': item['name'] ?? 'Unknown',
+              'rate': item['rate'] != null ? double.parse(item['rate'].toString()) : 0.0,
+              'price': item['price'] != null ? '${item['price']}đ' : '0đ',
+              'priceNumber': item['priceNumber'] != null ? int.parse(item['priceNumber'].toString()) : 0,
+              'size': item['size'] ?? 'N/A',
+              'image': image,
+              'category': categoryValue,
+              'description': item['description'] ?? '',
+            };
+          }).toList();
+          filteredProducts = allProducts.where((p) => p['category'] == selectedCategory).toList();
+          isLoading = false;
+          print('All products count: ${allProducts.length}');
+          if (allProducts.isEmpty) {
+            print('Warning: No products after processing');
+          }
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi API: ${response.statusCode} - ${response.body}')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      print('Error fetching products: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi: $e')),
+      );
+    }
   }
 
   void _filterProducts() {
@@ -75,14 +106,18 @@ class _HomePageState extends State<HomePage> {
             .contains(_searchController.text.toLowerCase());
         return matchesCategory && matchesKeyword;
       }).toList();
+      print('Filtered products count: ${filteredProducts.length}');
     });
   }
 
   void _searchProducts(String keyword) => _filterProducts();
 
-  void _selectCategory(String category) {
-    selectedCategory = category;
-    _filterProducts();
+  void _selectCategory(int category) {
+    setState(() {
+      selectedCategory = category;
+      filteredProducts = allProducts.where((p) => p['category'] == category).toList();
+      print('Selected category: $category, Filtered count: ${filteredProducts.length}');
+    });
   }
 
   @override
@@ -90,7 +125,11 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       body: SafeArea(
-        child: Column(
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : allProducts.isEmpty
+            ? const Center(child: Text('Không có dữ liệu sản phẩm hoặc lỗi API'))
+            : Column(
           children: [
             _buildHeader(),
             Expanded(
@@ -187,21 +226,22 @@ class _HomePageState extends State<HomePage> {
           autoPlay: true,
           viewportFraction: 0.85,
         ),
-        items: [
-          'assets/images/pizza1.png',
-          'assets/images/pizza2.png',
-          'assets/images/pz3.png',
-          'assets/images/kem1.png',
-          'assets/images/kem2.png',
-          'assets/images/cola.png'
-        ].map((image) {
+        items: allProducts.map((product) {
+          final image = product['image'] ?? 'default.png';
+          final ImageProvider imageProvider = image.startsWith('http')
+              ? NetworkImage(image) as ImageProvider
+              : AssetImage('assets/images/$image') as ImageProvider;
+
           return Container(
             margin: const EdgeInsets.symmetric(horizontal: 0),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(15),
               image: DecorationImage(
-                image: AssetImage(image),
+                image: imageProvider,
                 fit: BoxFit.cover,
+                onError: (exception, stackTrace) {
+                  print('Error loading image: $exception');
+                },
               ),
               boxShadow: [
                 BoxShadow(
@@ -223,19 +263,20 @@ class _HomePageState extends State<HomePage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _buildCategoryItem('Pizza', Icons.local_pizza),
-          _buildCategoryItem('Kem', Icons.icecream),
-          _buildCategoryItem('Nước có ga', Icons.local_drink),
-          _buildCategoryItem('Cafe', Icons.coffee),
+          _buildCategoryItem(0, Icons.local_pizza),
+          _buildCategoryItem(1, Icons.icecream),
+          _buildCategoryItem(2, Icons.local_drink),
+          _buildCategoryItem(3, Icons.coffee),
         ],
       ),
     );
   }
 
-  Widget _buildCategoryItem(String title, IconData icon) {
-    final isSelected = title == selectedCategory;
+  Widget _buildCategoryItem(int categoryId, IconData icon) {
+    final isSelected = categoryId == selectedCategory;
+    final categoryName = categoryMap[categoryId] ?? 'Unknown';
     return GestureDetector(
-      onTap: () => _selectCategory(title),
+      onTap: () => _selectCategory(categoryId),
       child: Column(
         children: [
           Container(
@@ -259,7 +300,7 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 4),
           Text(
-            title,
+            categoryName,
             style: TextStyle(
               fontSize: 14,
               color: isSelected ? Colors.orange[400] : Colors.grey[600],
@@ -295,6 +336,10 @@ class _HomePageState extends State<HomePage> {
           final description = product['description'] ?? '';
           final isFav = favoriteProducts.contains(name);
 
+          final ImageProvider imageProvider = image.startsWith('http')
+              ? NetworkImage(image) as ImageProvider
+              : AssetImage('assets/images/$image') as ImageProvider;
+
           return GestureDetector(
             onTap: () {
               Navigator.push(
@@ -326,7 +371,6 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Hình ảnh + yêu thích
                   Stack(
                     children: [
                       Container(
@@ -337,8 +381,11 @@ class _HomePageState extends State<HomePage> {
                             topRight: Radius.circular(15),
                           ),
                           image: DecorationImage(
-                            image: AssetImage('assets/images/$image'),
+                            image: imageProvider,
                             fit: BoxFit.cover,
+                            onError: (exception, stackTrace) {
+                              print('Error loading product image: $exception');
+                            },
                           ),
                         ),
                       ),
@@ -369,7 +416,6 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ],
                   ),
-                  // Nội dung
                   Padding(
                     padding: const EdgeInsets.all(10),
                     child: Column(
@@ -407,7 +453,7 @@ class _HomePageState extends State<HomePage> {
                               child: Text(
                                 price,
                                 style: TextStyle(
-                                  fontSize: 20, // Giảm font để tránh tràn
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.green[600],
                                 ),
@@ -431,7 +477,7 @@ class _HomePageState extends State<HomePage> {
                                 child: const Icon(
                                   Icons.add,
                                   color: Colors.white,
-                                  size: 25, // Icon nhỏ lại
+                                  size: 25,
                                 ),
                               ),
                             ),
