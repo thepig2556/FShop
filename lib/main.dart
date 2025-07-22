@@ -1,58 +1,42 @@
 import 'package:doan/home_page.dart';
+import 'package:doan/favorite_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'cart_page.dart';
 import 'favorite_page.dart';
+import 'login_page.dart';
 import 'profile.dart';
-import 'login_page.dart'; // Import trang login
 
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await Firebase.initializeApp();
 
-
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => FavoriteProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    String? userId = FirebaseAuth.instance.currentUser?.uid;
-    User? user = FirebaseAuth.instance.currentUser;
-    if(userId!=null)
-      {
-        if(user!.emailVerified)
-          {
-            return MaterialApp(
-                title: 'Pizza MART',
-                debugShowCheckedModeBanner: false,
-                home: const MainScreen()
-            );
-          }
-        else
-          {
-            return MaterialApp(
-                title: 'Pizza MART',
-                debugShowCheckedModeBanner: false,
-                home: const LoginPage()
-            );
-          }
-      }
-    else{
-      return MaterialApp(
-          title: 'Pizza MART',
-          debugShowCheckedModeBanner: false,
-          home: const LoginPage()
-      );
-    }
-    // return MaterialApp(
-    //     title: 'Pizza MART',
-    //     debugShowCheckedModeBanner: false,
-    //     home: const LoginPage()
-    // );
+    final User? user = FirebaseAuth.instance.currentUser;
+
+    return MaterialApp(
+      title: 'Pizza MART',
+      debugShowCheckedModeBanner: false,
+      home: (user != null && user.emailVerified)
+          ? const MainScreen()
+          : const LoginPage(),
+    );
   }
 }
 
@@ -64,14 +48,14 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int currentIndex = 0; // Mặc định trang yêu thích
+  int currentIndex = 0;
 
   final List<Widget> pages = [
-    HomePage(), // Index 0
-    Center(child: Text("Trang tìm kiếm")), // Index 1
-    CartPage(), // Index 2
-    FavoritePage(),                        // Index 3
-    ProfilePage(),                         // Index 4
+    HomePage(),
+    const Center(child: Text("Trang tìm kiếm")),
+    const CartPage(),
+    const FavoritePage(),
+    const ProfilePage(),
   ];
 
   @override
@@ -85,6 +69,7 @@ class _MainScreenState extends State<MainScreen> {
         currentIndex: currentIndex,
         type: BottomNavigationBarType.fixed,
         selectedItemColor: Colors.green,
+        unselectedItemColor: Colors.grey,
         onTap: (index) {
           setState(() {
             currentIndex = index;

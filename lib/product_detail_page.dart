@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'favorite_provider.dart';
+import 'product.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final String name;
   final double rate;
-  final String price;
-  final int priceNumber;
+  final String price; // Chuỗi giá (ví dụ: "175000đ")
+  final int priceNumber; // Số nguyên giá (ví dụ: 175000)
   final String image;
   final String description;
 
@@ -26,7 +29,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   bool isFavorite = false;
   int quantity = 1;
 
-  int get totalPrice => widget.priceNumber * quantity;
+  // Lấy giá số nguyên từ widget.price hoặc widget.priceNumber
+  int get basePrice => int.tryParse(widget.price.replaceAll('đ', '')) ?? widget.priceNumber ?? 0;
+  int get totalPrice => basePrice * quantity;
 
   String formatPrice(int price) {
     return '${price.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}đ';
@@ -47,8 +52,19 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   void _toggleFavorite() {
+    final product = Product(
+      name: widget.name,
+      image: widget.image,
+      rate: widget.rate,
+      description: widget.description,
+      price: basePrice, // Sử dụng giá số nguyên
+    );
+
+    final favoriteProvider = context.read<FavoriteProvider>();
+    favoriteProvider.toggleFavorite(product);
+
     setState(() {
-      isFavorite = !isFavorite;
+      isFavorite = favoriteProvider.isFavorite(product);
     });
   }
 
@@ -60,6 +76,23 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         duration: const Duration(seconds: 2),
       ),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Kiểm tra trạng thái yêu thích khi khởi tạo
+    final favoriteProvider = context.read<FavoriteProvider>();
+    final product = Product(
+      name: widget.name,
+      image: widget.image,
+      rate: widget.rate,
+      description: widget.description,
+      price: basePrice,
+    );
+    setState(() {
+      isFavorite = favoriteProvider.isFavorite(product);
+    });
   }
 
   @override
@@ -128,9 +161,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 ],
                               ),
                               child: Icon(
-                                isFavorite
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
+                                isFavorite ? Icons.favorite : Icons.favorite_border,
                                 color: Colors.red,
                                 size: 24,
                               ),
@@ -140,7 +171,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       ],
                     ),
                   ),
-
                   Padding(
                     padding: const EdgeInsets.all(20),
                     child: Column(
@@ -156,7 +186,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                         ),
                         const SizedBox(height: 8),
-
                         // Sao
                         Row(
                           children: [
@@ -165,9 +194,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 return Icon(
                                   index < widget.rate.floor()
                                       ? Icons.star
-                                      : (index < widget.rate
-                                      ? Icons.star_half
-                                      : Icons.star_border),
+                                      : (index < widget.rate ? Icons.star_half : Icons.star_border),
                                   color: Colors.orange,
                                   size: 30,
                                 );
@@ -184,26 +211,23 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ],
                         ),
                         const SizedBox(height: 16),
-
                         // Giá + Số lượng (cùng hàng)
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             // Giá
                             Text(
-                              widget.price,
+                              formatPrice(basePrice), // Sử dụng giá đã định dạng
                               style: const TextStyle(
                                 fontSize: 30,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF4CAF50),
                               ),
                             ),
-
                             // Số lượng
                             Container(
                               decoration: BoxDecoration(
-                                border:
-                                Border.all(color: Colors.grey[300]!),
+                                border: Border.all(color: Colors.grey[300]!),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
@@ -213,9 +237,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                     child: Container(
                                       padding: const EdgeInsets.all(10),
                                       decoration: BoxDecoration(
-                                        color: quantity > 1
-                                            ? Colors.red[50]
-                                            : Colors.grey[100],
+                                        color: quantity > 1 ? Colors.red[50] : Colors.grey[100],
                                         borderRadius: const BorderRadius.only(
                                           topLeft: Radius.circular(8),
                                           bottomLeft: Radius.circular(8),
@@ -223,16 +245,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                       ),
                                       child: Icon(
                                         Icons.remove,
-                                        color: quantity > 1
-                                            ? Colors.red
-                                            : Colors.grey,
+                                        color: quantity > 1 ? Colors.red : Colors.grey,
                                         size: 25,
                                       ),
                                     ),
                                   ),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 10),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                                     child: Text(
                                       quantity.toString(),
                                       style: const TextStyle(
@@ -265,7 +284,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ],
                         ),
                         const SizedBox(height: 20),
-
                         // Mô tả sản phẩm
                         const Text(
                           'Mô tả sản phẩm',
@@ -292,7 +310,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               ),
             ),
           ),
-
           // Thanh tổng tiền + nút thêm giỏ
           Container(
             padding: const EdgeInsets.all(20),
