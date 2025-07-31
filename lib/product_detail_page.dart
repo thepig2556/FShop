@@ -124,7 +124,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     width: double.infinity,
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                        image: AssetImage('assets/images/${widget.image}'),
+                        image: widget.image.startsWith('http')
+                            ? NetworkImage(widget.image)
+                            : AssetImage('assets/images/${widget.image}') as ImageProvider,
                         fit: BoxFit.cover,
                       ),
                     ),

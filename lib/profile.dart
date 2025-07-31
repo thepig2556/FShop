@@ -211,56 +211,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
               const SizedBox(height: 30),
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(25),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF6284AF).withOpacity(0.1),
-                      blurRadius: 15,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Thao tác nhanh",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF6284AF),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: const [
-                        QuickActionItem(
-                          icon: Icons.receipt_long_rounded,
-                          label: "Hóa đơn",
-                          color: Color(0xFF6284AF),
-                        ),
-                        QuickActionItem(
-                          icon: Icons.credit_card_rounded,
-                          label: "Thanh toán",
-                          color: Color(0xFF8BA3C7),
-                        ),
-                        QuickActionItem(
-                          icon: Icons.location_on_rounded,
-                          label: "Địa chỉ",
-                          color: Color(0xFFB8C5D6),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 30),
               // Profile Menu
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -315,7 +265,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       label: 'Đăng xuất',
                       color: Color(0xFFE74C3C),
                       isLogout: true,
-                      onTap: () async{
+                      onTap: () async {
                         await FirebaseAuth.instance.signOut();
                         Navigator.pushReplacement(
                           context,
