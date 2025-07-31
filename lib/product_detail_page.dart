@@ -6,8 +6,8 @@ import 'product.dart';
 class ProductDetailPage extends StatefulWidget {
   final String name;
   final double rate;
-  final String price; // Chuỗi giá (ví dụ: "175000đ")
-  final int priceNumber; // Số nguyên giá (ví dụ: 175000)
+  final String price;
+  final int priceNumber;
   final String image;
   final String description;
 
@@ -29,7 +29,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   bool isFavorite = false;
   int quantity = 1;
 
-  // Lấy giá số nguyên từ widget.price hoặc widget.priceNumber
   int get basePrice => int.tryParse(widget.price.replaceAll('đ', '')) ?? widget.priceNumber ?? 0;
   int get totalPrice => basePrice * quantity;
 
@@ -57,7 +56,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       image: widget.image,
       rate: widget.rate,
       description: widget.description,
-      price: basePrice, // Sử dụng giá số nguyên
+      price: basePrice,
     );
 
     final favoriteProvider = context.read<FavoriteProvider>();
@@ -81,7 +80,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   @override
   void initState() {
     super.initState();
-    // Kiểm tra trạng thái yêu thích khi khởi tạo
     final favoriteProvider = context.read<FavoriteProvider>();
     final product = Product(
       name: widget.name,
@@ -118,13 +116,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Hình ảnh
                   Container(
                     height: 250,
                     width: double.infinity,
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                        image: AssetImage('assets/images/${widget.image}'),
+                        image: widget.image.startsWith('http')
+                            ? NetworkImage(widget.image)
+                            : AssetImage('assets/images/${widget.image}') as ImageProvider,
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -186,7 +185,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        // Sao
                         Row(
                           children: [
                             Row(
@@ -211,20 +209,18 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        // Giá + Số lượng (cùng hàng)
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             // Giá
                             Text(
-                              formatPrice(basePrice), // Sử dụng giá đã định dạng
+                              formatPrice(basePrice),
                               style: const TextStyle(
                                 fontSize: 30,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF4CAF50),
                               ),
                             ),
-                            // Số lượng
                             Container(
                               decoration: BoxDecoration(
                                 border: Border.all(color: Colors.grey[300]!),
@@ -284,7 +280,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ],
                         ),
                         const SizedBox(height: 20),
-                        // Mô tả sản phẩm
                         const Text(
                           'Mô tả sản phẩm',
                           style: TextStyle(
@@ -310,7 +305,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               ),
             ),
           ),
-          // Thanh tổng tiền + nút thêm giỏ
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
