@@ -4,7 +4,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'product_detail_page.dart';
 
-// Bản ánh xạ category từ int sang tên hiển thị
 const Map<int, String> categoryMap = {
   0: 'Pizza',
   1: 'Kem',
@@ -25,7 +24,7 @@ class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> filteredProducts = [];
   Set<String> favoriteProducts = {};
   List<String> cart = [];
-  int selectedCategory = 0; // Sử dụng int thay vì String
+  int selectedCategory = 0;
   bool isLoading = true;
 
   @override
@@ -52,7 +51,7 @@ class _HomePageState extends State<HomePage> {
             try {
               if (item['category'] != null) {
                 final categoryStr = item['category'].toString();
-                categoryValue = int.parse(categoryStr); // Chuyển đổi String sang int
+                categoryValue = int.parse(categoryStr);
               }
             } catch (e) {
               print('Error parsing category: $e, using default 0');
