@@ -32,7 +32,8 @@ class _CartPageState extends State<CartPage> {
     final database = FirebaseDatabase.instance.ref();
     try {
       await _cleanInvalidCartItems(userId);
-      final cartSnapshot = await database.child('MobileNangCao/Cart/$userId').get();
+      final cartSnapshot =
+          await database.child('MobileNangCao/Cart/$userId').get();
       if (!cartSnapshot.exists) {
         setState(() {
           cartItems = [];
@@ -44,11 +45,12 @@ class _CartPageState extends State<CartPage> {
 
       final cartData = cartSnapshot.value as Map<dynamic, dynamic>? ?? {};
       final menuFood = cartData['MenuFood'];
-      List<dynamic> menuFoodItems = menuFood is Map
-          ? menuFood.entries.map((e) => e.value).toList()
-          : menuFood is List
-          ? menuFood
-          : [];
+      List<dynamic> menuFoodItems =
+          menuFood is Map
+              ? menuFood.entries.map((e) => e.value).toList()
+              : menuFood is List
+              ? menuFood
+              : [];
 
       if (menuFoodItems.isEmpty) {
         setState(() {
@@ -60,36 +62,46 @@ class _CartPageState extends State<CartPage> {
       }
 
       final foodsSnapshot = await database.child('MobileNangCao/Foods').get();
-      final foodsList = foodsSnapshot.exists ? foodsSnapshot.value as List<dynamic>? ?? [] : [];
+      final foodsList =
+          foodsSnapshot.exists
+              ? foodsSnapshot.value as List<dynamic>? ?? []
+              : [];
 
-      final enrichedItems = menuFoodItems
-          .where((item) => item != null && item['id'] != null && item['quantity'] != null)
-          .map((item) {
-        final foodId = item['id'].toString();
-        final quantity = item['quantity'] as int;
-        final foodData = foodsList.firstWhere(
-              (food) => food != null && food['id']?.toString() == foodId,
-          orElse: () => null,
-        );
+      final enrichedItems =
+          menuFoodItems
+              .where(
+                (item) =>
+                    item != null &&
+                    item['id'] != null &&
+                    item['quantity'] != null,
+              )
+              .map((item) {
+                final foodId = item['id'].toString();
+                final quantity = item['quantity'] as int;
+                final foodData = foodsList.firstWhere(
+                  (food) => food != null && food['id']?.toString() == foodId,
+                  orElse: () => null,
+                );
 
-        if (foodData == null) {
-          return {
-            'foodId': foodId,
-            'quantity': quantity,
-            'name': 'Món không tồn tại',
-            'image': '',
-            'price': 0.0,
-          };
-        }
+                if (foodData == null) {
+                  return {
+                    'foodId': foodId,
+                    'quantity': quantity,
+                    'name': 'Món không tồn tại',
+                    'image': '',
+                    'price': 0.0,
+                  };
+                }
 
-        return {
-          'foodId': foodId,
-          'quantity': quantity,
-          'name': foodData['name'] ?? 'Không xác định',
-          'image': foodData['image'] ?? '',
-          'price': (foodData['price'] as num?)?.toDouble() ?? 0.0,
-        };
-      }).toList();
+                return {
+                  'foodId': foodId,
+                  'quantity': quantity,
+                  'name': foodData['name'] ?? 'Không xác định',
+                  'image': foodData['image'] ?? '',
+                  'price': (foodData['price'] as num?)?.toDouble() ?? 0.0,
+                };
+              })
+              .toList();
 
       setState(() {
         cartItems = enrichedItems;
@@ -104,7 +116,8 @@ class _CartPageState extends State<CartPage> {
   Future<void> _updateCartTotal(String userId) async {
     final database = FirebaseDatabase.instance.ref();
     try {
-      final cartSnapshot = await database.child('MobileNangCao/Cart/$userId').get();
+      final cartSnapshot =
+          await database.child('MobileNangCao/Cart/$userId').get();
       if (!cartSnapshot.exists) {
         await database.child('MobileNangCao/Cart/$userId/total').set(0);
         setState(() => totalPrice = 0);
@@ -113,11 +126,12 @@ class _CartPageState extends State<CartPage> {
 
       final cartData = cartSnapshot.value as Map<dynamic, dynamic>? ?? {};
       final menuFood = cartData['MenuFood'];
-      List<dynamic> menuFoodItems = menuFood is Map
-          ? menuFood.entries.map((e) => e.value).toList()
-          : menuFood is List
-          ? menuFood
-          : [];
+      List<dynamic> menuFoodItems =
+          menuFood is Map
+              ? menuFood.entries.map((e) => e.value).toList()
+              : menuFood is List
+              ? menuFood
+              : [];
 
       if (menuFoodItems.isEmpty) {
         await database.child('MobileNangCao/Cart/$userId/total').set(0);
@@ -126,7 +140,10 @@ class _CartPageState extends State<CartPage> {
       }
 
       final foodsSnapshot = await database.child('MobileNangCao/Foods').get();
-      final foodsList = foodsSnapshot.exists ? (foodsSnapshot.value as List<dynamic>? ?? []) : [];
+      final foodsList =
+          foodsSnapshot.exists
+              ? (foodsSnapshot.value as List<dynamic>? ?? [])
+              : [];
 
       double total = 0;
       for (var item in menuFoodItems) {
@@ -137,7 +154,7 @@ class _CartPageState extends State<CartPage> {
         final quantity = item['quantity'] as int;
 
         final foodData = foodsList.firstWhere(
-              (food) => food != null && food['id']?.toString() == foodId,
+          (food) => food != null && food['id']?.toString() == foodId,
           orElse: () => null,
         );
 
@@ -155,14 +172,14 @@ class _CartPageState extends State<CartPage> {
 
       await database.child('MobileNangCao/Cart/$userId/total').set(total);
       setState(() => totalPrice = total);
-    } catch (e, stackTrace) {
-    }
+    } catch (e, stackTrace) {}
   }
 
   Future<void> _cleanInvalidCartItems(String userId) async {
     final database = FirebaseDatabase.instance.ref();
     try {
-      final cartSnapshot = await database.child('MobileNangCao/Cart/$userId').get();
+      final cartSnapshot =
+          await database.child('MobileNangCao/Cart/$userId').get();
       if (!cartSnapshot.exists) return;
 
       final cartData = cartSnapshot.value as Map<dynamic, dynamic>? ?? {};
@@ -170,21 +187,29 @@ class _CartPageState extends State<CartPage> {
       if (menuFood == null) return;
 
       final foodsSnapshot = await database.child('MobileNangCao/Foods').get();
-      final foodsList = foodsSnapshot.exists ? (foodsSnapshot.value as List<dynamic>? ?? []) : [];
-      final validFoodIds = foodsList.where((food) => food != null).map((food) => food['id'].toString()).toSet();
+      final foodsList =
+          foodsSnapshot.exists
+              ? (foodsSnapshot.value as List<dynamic>? ?? [])
+              : [];
+      final validFoodIds =
+          foodsList
+              .where((food) => food != null)
+              .map((food) => food['id'].toString())
+              .toSet();
 
       if (menuFood is Map) {
         for (var entry in menuFood.entries) {
           final foodId = entry.value['id']?.toString();
           if (foodId != null && !validFoodIds.contains(foodId)) {
             print('Removing invalid item with foodId: $foodId');
-            await database.child('MobileNangCao/Cart/$userId/MenuFood/${entry.key}').remove();
+            await database
+                .child('MobileNangCao/Cart/$userId/MenuFood/${entry.key}')
+                .remove();
           }
         }
       }
       await _updateCartTotal(userId);
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   Future<void> _updateQuantity(String foodId, int quantity) async {
@@ -199,14 +224,12 @@ class _CartPageState extends State<CartPage> {
 
     final database = FirebaseDatabase.instance.ref();
     try {
-      await database.child('MobileNangCao/Cart/$userId/MenuFood/$foodId').update({
-        'id': foodId,
-        'quantity': quantity,
-      });
+      await database
+          .child('MobileNangCao/Cart/$userId/MenuFood/$foodId')
+          .update({'id': foodId, 'quantity': quantity});
       await _updateCartTotal(userId);
       await _fetchCartItems();
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   Future<void> _removeItem(String foodId) async {
@@ -217,15 +240,18 @@ class _CartPageState extends State<CartPage> {
 
     final database = FirebaseDatabase.instance.ref();
     try {
-      await database.child('MobileNangCao/Cart/$userId/MenuFood/$foodId').remove();
+      await database
+          .child('MobileNangCao/Cart/$userId/MenuFood/$foodId')
+          .remove();
       await _updateCartTotal(userId);
       await _fetchCartItems();
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   String formatPrice(double price) {
@@ -255,10 +281,16 @@ class _CartPageState extends State<CartPage> {
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFF6284AF), Color(0xFF8BA3C7), Color(0xFFB8C5D6)],
+                  colors: [
+                    Color(0xFF6284AF),
+                    Color(0xFF8BA3C7),
+                    Color(0xFFB8C5D6),
+                  ],
                   stops: [0.0, 0.6, 1.0],
                 ),
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(30),
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Color(0xFF6284AF).withOpacity(0.3),
@@ -280,104 +312,149 @@ class _CartPageState extends State<CartPage> {
               ),
             ),
             Expanded(
-              child: isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : cartItems.isEmpty
-                  ? const Center(child: Text('Giỏ hàng trống'))
-                  : SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: cartItems.length,
-                        itemBuilder: (context, index) {
-                          final item = cartItems[index];
-                          return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 8),
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(10),
-                                    child: Image.network(
-                                      item['image'] ?? '',
-                                      width: 90,
-                                      height: 90,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) => Image.asset(
-                                        'assets/images/pizza2.png',
-                                        width: 90,
-                                        height: 90,
-                                        fit: BoxFit.cover,
+              child:
+                  isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : cartItems.isEmpty
+                      ? const Center(child: Text('Giỏ hàng trống'))
+                      : SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 16),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: cartItems.length,
+                                itemBuilder: (context, index) {
+                                  final item = cartItems[index];
+                                  return Card(
+                                    margin: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
+                                    elevation: 4,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(15),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8),
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                            child: Image.network(
+                                              item['image'] ?? '',
+                                              width: 90,
+                                              height: 90,
+                                              fit: BoxFit.cover,
+                                              errorBuilder:
+                                                  (
+                                                    context,
+                                                    error,
+                                                    stackTrace,
+                                                  ) => Image.asset(
+                                                    'assets/images/pizza2.png',
+                                                    width: 90,
+                                                    height: 90,
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  item['name'] ??
+                                                      'Không xác định',
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                                const Text(
+                                                  'Món ăn',
+                                                  style: TextStyle(
+                                                    color: Color(0xFF64748B),
+                                                  ),
+                                                ),
+                                                Text(
+                                                  '${item['quantity']} x ${formatPrice(item['price'] ?? 0)}',
+                                                  style: const TextStyle(
+                                                    color: Color(0xFF94A3B8),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Row(
+                                            children: [
+                                              _QuantityButton(
+                                                icon: Icons.remove,
+                                                onPressed: () {
+                                                  if (item['quantity'] > 1) {
+                                                    _updateQuantity(
+                                                      item['foodId'],
+                                                      item['quantity'] - 1,
+                                                    );
+                                                  }
+                                                },
+                                              ),
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                    ),
+                                                child: Text(
+                                                  item['quantity'].toString(),
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                              ),
+                                              _QuantityButton(
+                                                icon: Icons.add,
+                                                onPressed: () {
+                                                  _updateQuantity(
+                                                    item['foodId'],
+                                                    item['quantity'] + 1,
+                                                  );
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                          IconButton(
+                                            onPressed:
+                                                () =>
+                                                    _removeItem(item['foodId']),
+                                            icon: const Icon(
+                                              Icons.close,
+                                              color: Color(0xFFE74C3C),
+                                              size: 24,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          item['name'] ?? 'Không xác định',
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                        ),
-                                        const Text('Món ăn', style: TextStyle(color: Color(0xFF64748B))),
-                                        Text(
-                                          '${item['quantity']} x ${formatPrice(item['price'] ?? 0)}',
-                                          style: const TextStyle(color: Color(0xFF94A3B8)),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Row(
-                                    children: [
-                                      _QuantityButton(
-                                        icon: Icons.remove,
-                                        onPressed: () {
-                                          if (item['quantity'] > 1) {
-                                            _updateQuantity(item['foodId'], item['quantity'] - 1);
-                                          }
-                                        },
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                                        child: Text(
-                                          item['quantity'].toString(),
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                        ),
-                                      ),
-                                      _QuantityButton(
-                                        icon: Icons.add,
-                                        onPressed: () {
-                                          _updateQuantity(item['foodId'], item['quantity'] + 1);
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                  IconButton(
-                                    onPressed: () => _removeItem(item['foodId']),
-                                    icon: const Icon(Icons.close, color: Color(0xFFE74C3C), size: 24),
-                                  ),
-                                ],
+                                  );
+                                },
                               ),
                             ),
-                          );
-                        },
+                            const SizedBox(height: 100),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 100),
-                  ],
-                ),
-              ),
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -400,26 +477,43 @@ class _CartPageState extends State<CartPage> {
                   Expanded(
                     child: Text(
                       'Thanh toán\n${formatPrice(totalPrice)}',
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 18,
+                      ),
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: cartItems.isEmpty
-                        ? null
-                        : () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CheckoutPage(cartItems: cartItems, totalPrice: totalPrice),
-                      ),
-                    ),
+                    onPressed:
+                        cartItems.isEmpty
+                            ? null
+                            : () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => CheckoutPage(
+                                      cartItems: cartItems,
+                                      totalPrice: totalPrice,
+                                    ),
+                              ),
+                            ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: const Color(0xFF77C29F),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 14,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       elevation: 0,
                     ),
-                    child: const Text('Thanh toán', style: TextStyle(fontSize: 16)),
+                    child: const Text(
+                      'Thanh toán',
+                      style: TextStyle(fontSize: 16),
+                    ),
                   ),
                 ],
               ),

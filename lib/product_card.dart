@@ -16,15 +16,16 @@ class ProductCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ProductDetailPage(
-              id: product.id,
-              name: product.name,
-              rate: product.rate,
-              price: product.priceString,
-              priceNumber: product.price,
-              image: product.image,
-              description: product.description,
-            ),
+            builder:
+                (context) => ProductDetailPage(
+                  id: product.id,
+                  name: product.name,
+                  rate: product.rate,
+                  price: product.priceString,
+                  priceNumber: product.price,
+                  image: product.image,
+                  description: product.description,
+                ),
           ),
         );
       },
@@ -35,7 +36,9 @@ class ProductCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
               child: Image.network(
                 product.image,
                 height: 120,
@@ -55,7 +58,10 @@ class ProductCard extends StatelessWidget {
                   children: [
                     Text(
                       product.name,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -103,9 +109,7 @@ class ProductCard extends StatelessWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.add, color: Colors.blue, size: 20),
-                    onPressed: () {
-                      // TODO: thêm vào giỏ hàng
-                    },
+                    onPressed: () {},
                     padding: EdgeInsets.zero,
                   ),
                 ],

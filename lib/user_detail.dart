@@ -1,9 +1,10 @@
 import 'package:doan/address_selection_page.dart';
-import 'package:doan/profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import 'package:latlong2/latlong.dart';
 
 class UserDetailPage extends StatefulWidget {
   const UserDetailPage({super.key});
@@ -50,6 +51,43 @@ class _UserDetailPageState extends State<UserDetailPage> {
         errorMessage = 'Lỗi kết nối đến API: $e';
       });
     }
+  }
+
+  Future<LatLng?> _geocodeInitialAddress(String address) async {
+    try {
+      final url = Uri.parse(
+        'https://nominatim.openstreetmap.org/search?q=$address,+Vietnam&format=json&limit=1',
+      );
+      final response = await http.get(
+        url,
+        headers: {'User-Agent': 'YourAppName/1.0 (contact@example.com)'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data.isNotEmpty) {
+          final lat = double.parse(data[0]['lat']);
+          final lon = double.parse(data[0]['lon']);
+          return LatLng(lat, lon);
+        }
+      }
+    } catch (e) {
+      _showSnackBar('Lỗi khi geocoding địa chỉ ban đầu: $e');
+    }
+    return null;
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(fontSize: 14),
+        ),
+        backgroundColor: message.contains('Lỗi') ? Colors.red : Colors.green,
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -245,11 +283,25 @@ class _UserDetailPageState extends State<UserDetailPage> {
                       icon: Icons.location_on,
                       value: userData?['address'] ?? 'Chưa có dữ liệu',
                       isMultiline: true,
-                      onTap: () {
+                      onTap: () async {
+                        final initialLocation = userData?['address'] != null
+                            ? await _geocodeInitialAddress(userData!['address'])
+                            : null;
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => LocationSelectionScreen()),
-                        );
+                          MaterialPageRoute(
+                            builder: (context) => LocationPickerPage(
+                              initialAddress: userData?['address'],
+                              initialLocation: initialLocation,
+                            ),
+                          ),
+                        ).then((result) {
+                          if (result != null) {
+                            setState(() {
+                              userData?['address'] = result['address'];
+                            });
+                          }
+                        });
                       },
                     ),
                   ],

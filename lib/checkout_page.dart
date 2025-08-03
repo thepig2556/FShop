@@ -158,8 +158,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   @override
   Widget build(BuildContext context) {
-    const deliveryFee = 20000.0; // Phí giao hàng cố định
-    const discount = 0.0; // Giảm giá cố định
+    const deliveryFee = 20000.0;
     final totalWithFee = widget.totalPrice + deliveryFee;
 
     return Scaffold(
@@ -184,7 +183,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   ),
                   const Spacer(),
                   const Text(
-                    'Thanh toán',
+                    'Đặt hàng',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                   const Spacer(),
@@ -217,7 +216,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       title: "Thẻ ngân hàng / Ví điện tử",
                       value: PaymentMethod.card,
                       groupValue: _selectedMethod,
-                      onChanged: null, // Disable the card payment option
+                      onChanged: null,
                       primaryColor: primaryColor,
                     ),
 
@@ -368,7 +367,7 @@ class _PaymentTile extends StatelessWidget {
   final String title;
   final PaymentMethod value;
   final PaymentMethod groupValue;
-  final ValueChanged<PaymentMethod?>? onChanged; // Made nullable
+  final ValueChanged<PaymentMethod?>? onChanged;
   final Color primaryColor;
 
   const _PaymentTile({
@@ -399,7 +398,7 @@ class _PaymentTile extends StatelessWidget {
           title: Text(
             title,
             style: TextStyle(
-              color: onChanged == null ? Colors.grey : Colors.black, // Grey out text when disabled
+              color: onChanged == null ? Colors.grey : Colors.black,
             ),
           ),
           onChanged: onChanged,

@@ -62,7 +62,6 @@ class _RegisterPageState extends State<RegisterPage> {
             avatarUrl = 'https://firebasestorage.googleapis.com/v0/b/tousehao.appspot.com/o/avt.png?alt=media&token=d4b325e8-c4f1-49e3-8438-3f980dd4a4bf';
         }
 
-        // Prepare data for API
         final userData = {
           'id': userCredential.user!.uid,
           'name': _nameController.text.trim(),

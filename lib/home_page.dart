@@ -77,66 +77,78 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _fetchProducts() async {
     try {
-      final response = await http.get(Uri.parse('https://apitaofood.onrender.com/foods'));
+      final response = await http.get(
+        Uri.parse('https://apitaofood.onrender.com/foods'),
+      );
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        if (data.isEmpty) {
-        }
+        if (data.isEmpty) {}
         setState(() {
-          allProducts = data.map((item) {
-            int categoryValue = 0;
-            try {
-              if (item['category'] != null) {
-                final categoryStr = item['category'].toString();
-                categoryValue = int.parse(categoryStr);
-              }
-            } catch (e) {
-            }
-            final image = item['image'] ?? 'default.png';
-            return {
-              'id': item['id'] ?? 0,
-              'name': item['name'] ?? 'Unknown',
-              'rate': item['rate'] != null ? double.parse(item['rate'].toString()) : 0.0,
-              'price': item['price'] != null ? '${item['price']}đ' : '0đ',
-              'priceNumber': item['priceNumber'] != null ? int.parse(item['priceNumber'].toString()) : 0,
-              'size': item['size'] ?? 'N/A',
-              'image': image,
-              'category': categoryValue,
-              'description': item['description'] ?? '',
-            };
-          }).toList();
-          filteredProducts = allProducts.where((p) => p['category'] == selectedCategory).toList();
+          allProducts =
+              data.map((item) {
+                int categoryValue = 0;
+                try {
+                  if (item['category'] != null) {
+                    final categoryStr = item['category'].toString();
+                    categoryValue = int.parse(categoryStr);
+                  }
+                } catch (e) {}
+                final image = item['image'] ?? 'default.png';
+                return {
+                  'id': item['id'] ?? 0,
+                  'name': item['name'] ?? 'Unknown',
+                  'rate':
+                      item['rate'] != null
+                          ? double.parse(item['rate'].toString())
+                          : 0.0,
+                  'price': item['price'] != null ? '${item['price']}đ' : '0đ',
+                  'priceNumber':
+                      item['priceNumber'] != null
+                          ? int.parse(item['priceNumber'].toString())
+                          : 0,
+                  'size': item['size'] ?? 'N/A',
+                  'image': image,
+                  'category': categoryValue,
+                  'description': item['description'] ?? '',
+                };
+              }).toList();
+          filteredProducts =
+              allProducts
+                  .where((p) => p['category'] == selectedCategory)
+                  .toList();
           isLoading = false;
-          if (allProducts.isEmpty) {
-          }
+          if (allProducts.isEmpty) {}
         });
       } else {
         setState(() {
           isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi API: ${response.statusCode} - ${response.body}')),
+          SnackBar(
+            content: Text('Lỗi API: ${response.statusCode} - ${response.body}'),
+          ),
         );
       }
     } catch (e) {
       setState(() {
         isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Lỗi: $e')));
     }
   }
 
   void _filterProducts() {
     setState(() {
-      filteredProducts = allProducts.where((p) {
-        final matchesCategory = p['category'] == selectedCategory;
-        final matchesKeyword = p['name']
-            .toLowerCase()
-            .contains(_searchController.text.toLowerCase());
-        return matchesCategory && matchesKeyword;
-      }).toList();
+      filteredProducts =
+          allProducts.where((p) {
+            final matchesCategory = p['category'] == selectedCategory;
+            final matchesKeyword = p['name'].toLowerCase().contains(
+              _searchController.text.toLowerCase(),
+            );
+            return matchesCategory && matchesKeyword;
+          }).toList();
       print('Filtered products count: ${filteredProducts.length}');
     });
   }
@@ -146,8 +158,11 @@ class _HomePageState extends State<HomePage> {
   void _selectCategory(int category) {
     setState(() {
       selectedCategory = category;
-      filteredProducts = allProducts.where((p) => p['category'] == category).toList();
-      print('Selected category: $category, Filtered count: ${filteredProducts.length}');
+      filteredProducts =
+          allProducts.where((p) => p['category'] == category).toList();
+      print(
+        'Selected category: $category, Filtered count: ${filteredProducts.length}',
+      );
     });
   }
 
@@ -156,26 +171,29 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       body: SafeArea(
-        child: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : allProducts.isEmpty
-            ? const Center(child: Text('Không có dữ liệu sản phẩm hoặc lỗi API'))
-            : Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
+        child:
+            isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : allProducts.isEmpty
+                ? const Center(
+                  child: Text('Không có dữ liệu sản phẩm hoặc lỗi API'),
+                )
+                : Column(
                   children: [
-                    _buildCarousel(),
-                    _buildCategoryRow(),
-                    _buildProductGrid(),
+                    _buildHeader(),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            _buildCarousel(),
+                            _buildCategoryRow(),
+                            _buildProductGrid(),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -196,23 +214,22 @@ class _HomePageState extends State<HomePage> {
             children: [
               CircleAvatar(
                 backgroundColor: Colors.white,
-                child: avatarUrl != null
-                    ? ClipOval(
-                  child: Image.network(
-                    avatarUrl!,
-                    fit: BoxFit.cover,
-                    width: 40,
-                    height: 40,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.person,
-                      color: Color(0xFF5C7C99),
-                    ),
-                  ),
-                )
-                    : const Icon(
-                  Icons.person,
-                  color: Color(0xFF5C7C99),
-                ),
+                child:
+                    avatarUrl != null
+                        ? ClipOval(
+                          child: Image.network(
+                            avatarUrl!,
+                            fit: BoxFit.cover,
+                            width: 40,
+                            height: 40,
+                            errorBuilder:
+                                (context, error, stackTrace) => const Icon(
+                                  Icons.person,
+                                  color: Color(0xFF5C7C99),
+                                ),
+                          ),
+                        )
+                        : const Icon(Icons.person, color: Color(0xFF5C7C99)),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -253,8 +270,10 @@ class _HomePageState extends State<HomePage> {
                 hintStyle: TextStyle(color: Colors.grey[400]),
                 prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
                 border: InputBorder.none,
-                contentPadding:
-                const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 15,
+                ),
               ),
             ),
           ),
@@ -273,33 +292,35 @@ class _HomePageState extends State<HomePage> {
           autoPlay: true,
           viewportFraction: 0.85,
         ),
-        items: allProducts.map((product) {
-          final image = product['image'] ?? 'default.png';
-          final ImageProvider imageProvider = image.startsWith('http')
-              ? NetworkImage(image) as ImageProvider
-              : AssetImage('assets/images/$image') as ImageProvider;
+        items:
+            allProducts.map((product) {
+              final image = product['image'] ?? 'default.png';
+              final ImageProvider imageProvider =
+                  image.startsWith('http')
+                      ? NetworkImage(image) as ImageProvider
+                      : AssetImage('assets/images/$image') as ImageProvider;
 
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 0),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(15),
-              image: DecorationImage(
-                image: imageProvider,
-                fit: BoxFit.cover,
-                onError: (exception, stackTrace) {
-                  print('Error loading image: $exception');
-                },
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 0),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  image: DecorationImage(
+                    image: imageProvider,
+                    fit: BoxFit.cover,
+                    onError: (exception, stackTrace) {
+                      print('Error loading image: $exception');
+                    },
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          );
-        }).toList(),
+              );
+            }).toList(),
       ),
     );
   }
@@ -383,24 +404,27 @@ class _HomePageState extends State<HomePage> {
           final description = product['description'] ?? '';
           final isFav = favoriteProducts.contains(name);
 
-          final ImageProvider imageProvider = image.startsWith('http')
-              ? NetworkImage(image) as ImageProvider
-              : AssetImage('assets/images/$image') as ImageProvider;
+          final ImageProvider imageProvider =
+              image.startsWith('http')
+                  ? NetworkImage(image) as ImageProvider
+                  : AssetImage('assets/images/$image') as ImageProvider;
 
           return GestureDetector(
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => ProductDetailPage(
-                    id: product['id'], // Thêm id
-                    name: name,
-                    rate: rate,
-                    price: price,
-                    priceNumber: priceNumber,
-                    image: image,
-                    description: description,
-                  ),
+                  builder:
+                      (_) => ProductDetailPage(
+                        id: product['id'],
+                        // Thêm id
+                        name: name,
+                        rate: rate,
+                        price: price,
+                        priceNumber: priceNumber,
+                        image: image,
+                        description: description,
+                      ),
                 ),
               );
             },
@@ -456,13 +480,18 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(height: 0),
                         Row(
                           children: [
-                            const Icon(Icons.star,
-                                color: Colors.orange, size: 20),
+                            const Icon(
+                              Icons.star,
+                              color: Colors.orange,
+                              size: 20,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               rate.toString(),
                               style: TextStyle(
-                                  fontSize: 16, color: Colors.grey[600]),
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                              ),
                             ),
                           ],
                         ),
@@ -470,7 +499,9 @@ class _HomePageState extends State<HomePage> {
                         Text(
                           size,
                           style: TextStyle(
-                              fontSize: 14, color: Colors.grey[600]),
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Row(
@@ -510,7 +541,5 @@ class _HomePageState extends State<HomePage> {
 }
 
 void main() {
-  runApp(const MaterialApp(
-    home: HomePage(),
-  ));
+  runApp(const MaterialApp(home: HomePage()));
 }

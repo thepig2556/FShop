@@ -28,7 +28,7 @@ class LoginPage extends StatelessWidget {
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 child: const Divider(
-                  color: Color(0xFFE8E8E8), // Màu xám nhẹ
+                  color: Color(0xFFE8E8E8),
                   thickness: 1,
                   height: 1,
                 ),
@@ -38,7 +38,7 @@ class LoginPage extends StatelessWidget {
                 'Phiên bản 1.0',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Color(0xFFB8C5D1), // Màu xám xanh nhẹ
+                  color: Color(0xFFB8C5D1),
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),
@@ -53,7 +53,7 @@ class LoginPage extends StatelessWidget {
   Widget _buildInfoCard() {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FA), // Màu trắng kem, dễ nhìn
+        color: const Color(0xFFF8F9FA),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -81,7 +81,7 @@ class LoginPage extends StatelessWidget {
                         TextSpan(
                           text: 'Pizza ',
                           style: TextStyle(
-                            color: Color(0xFF1B5E20), // Màu xanh lá đậm, dễ đọc
+                            color: Color(0xFF1B5E20),
                             fontSize: 34,
                             fontWeight: FontWeight.bold,
                           ),
@@ -89,7 +89,7 @@ class LoginPage extends StatelessWidget {
                         TextSpan(
                           text: 'MART',
                           style: TextStyle(
-                            color: Color(0xFF2E4057), // Màu xanh navy
+                            color: Color(0xFF2E4057),
                             fontSize: 34,
                             fontWeight: FontWeight.bold,
                           ),
@@ -100,7 +100,7 @@ class LoginPage extends StatelessWidget {
                   const Text(
                     'Giao đồ ăn',
                     style: TextStyle(
-                      color: Color(0xFF5D6D7E), // Màu xám xanh
+                      color: Color(0xFF5D6D7E),
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
                     ),
@@ -112,22 +112,22 @@ class LoginPage extends StatelessWidget {
           const SizedBox(height: 10),
           _buildFeatureItem(
             icon: Icons.restaurant_menu,
-            iconColor: const Color(0xFFD84315), // Màu cam đậm
+            iconColor: const Color(0xFFD84315),
             text: 'Thực phẩm nguyên chất',
           ),
           _buildFeatureItem(
             icon: Icons.local_shipping,
-            iconColor: const Color(0xFF1565C0), // Màu xanh dương đậm
+            iconColor: const Color(0xFF1565C0),
             text: 'Giao hàng nhanh',
           ),
           _buildFeatureItem(
             icon: Icons.attach_money,
-            iconColor: const Color(0xFF2E7D32), // Màu xanh lá đậm
+            iconColor: const Color(0xFF2E7D32),
             text: 'Đảm bảo hoàn tiền',
           ),
           _buildFeatureItem(
             icon: Icons.security,
-            iconColor: const Color(0xFFC62828), // Màu đỏ đậm
+            iconColor: const Color(0xFFC62828),
             text: 'An toàn và bảo mật',
           ),
         ],
@@ -140,7 +140,7 @@ class LoginPage extends StatelessWidget {
       Text(
         'Chào mừng đến với',
         style: TextStyle(
-          color: Color(0xFFF8F9FA), // Màu trắng kem
+          color: Color(0xFFF8F9FA),
           fontSize: 30,
           fontWeight: FontWeight.w600,
         ),
@@ -148,7 +148,7 @@ class LoginPage extends StatelessWidget {
       Text(
         'cửa hàng của chúng tôi',
         style: TextStyle(
-          color: Color(0xFFF8F9FA), // Màu trắng kem
+          color: Color(0xFFF8F9FA),
           fontSize: 30,
           fontWeight: FontWeight.w600,
         ),
@@ -158,7 +158,7 @@ class LoginPage extends StatelessWidget {
         'Nhận hàng tạp hóa của bạn nhanh nhất\nchỉ trong một giờ',
         textAlign: TextAlign.center,
         style: TextStyle(
-          color: Color(0xFFD5DBDB), // Màu xám nhẹ
+          color: Color(0xFFD5DBDB),
           fontSize: 18,
           fontWeight: FontWeight.w500,
           height: 1.3,
@@ -169,10 +169,10 @@ class LoginPage extends StatelessWidget {
 
   Widget _buildLoginBtn(BuildContext context) {
     return SizedBox(
-      height: 56, // Tăng chiều cao cho dễ bấm
+      height: 56,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF1B5E20), // Màu xanh lá đậm
+          backgroundColor: const Color(0xFF1B5E20),
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -193,15 +193,15 @@ class LoginPage extends StatelessWidget {
 
   Widget _buildRegisterBtn(BuildContext context) {
     return SizedBox(
-      height: 56, // Tăng chiều cao cho dễ bấm
+      height: 56,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFF8F9FA), // Màu trắng kem
-          foregroundColor: const Color(0xFF1B5E20), // Màu xanh lá đậm
+          backgroundColor: const Color(0xFFF8F9FA),
+          foregroundColor: const Color(0xFF1B5E20),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: const BorderSide(
-              color: Color(0xFF1B5E20), // Viền xanh lá đậm
+              color: Color(0xFF1B5E20),
               width: 2,
             ),
           ),
@@ -250,7 +250,7 @@ class LoginPage extends StatelessWidget {
               text,
               style: const TextStyle(
                 fontSize: 20,
-                color: Color(0xFF2E4057), // Màu xanh navy
+                color: Color(0xFF2E4057),
                 fontWeight: FontWeight.w600,
               ),
             ),

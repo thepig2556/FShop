@@ -1,5 +1,5 @@
 class Product {
-  final int id; // Thêm id
+  final int id;
   final String name;
   final String image;
   final double rate;
@@ -8,7 +8,7 @@ class Product {
   final String priceString;
 
   Product({
-    required this.id, // Thêm id
+    required this.id,
     required this.name,
     required this.image,
     required this.rate,
@@ -18,9 +18,9 @@ class Product {
 
   @override
   bool operator ==(Object other) {
-    return other is Product && other.id == id; // So sánh bằng id
+    return other is Product && other.id == id;
   }
 
   @override
-  int get hashCode => id.hashCode; // Dùng id cho hashCode
+  int get hashCode => id.hashCode;
 }

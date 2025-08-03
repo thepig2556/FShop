@@ -74,7 +74,6 @@ class FavoriteProvider extends ChangeNotifier {
 
     if (_favorites.contains(product)) {
       _favorites.remove(product);
-      // Xóa khỏi Firebase
       try {
         await productRef.remove();
         print('Removed favorite ${product.id} from Firebase');
