@@ -28,7 +28,6 @@ class FavoriteProvider extends ChangeNotifier {
       final response = await http.get(Uri.parse('https://apitaofood.onrender.com/foods'));
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        // Không cần lưu trữ foods, chỉ cần để tham khảo nếu cần
         print('Fetched ${data.length} foods from API');
       }
     } catch (e) {
@@ -49,7 +48,7 @@ class FavoriteProvider extends ChangeNotifier {
         data.forEach((key, value) {
           final productData = value as Map<dynamic, dynamic>;
           _favorites.add(Product(
-            id: int.parse(key), // Lấy id từ key
+            id: int.parse(key),
             name: productData['name'] ?? '',
             image: productData['image'] ?? '',
             rate: (productData['rate'] ?? 0.0).toDouble(),
@@ -81,11 +80,10 @@ class FavoriteProvider extends ChangeNotifier {
         print('Removed favorite ${product.id} from Firebase');
       } catch (e) {
         print('Error removing favorite from Firebase: $e');
-        _favorites.add(product); // Hoàn tác nếu lỗi
+        _favorites.add(product);
       }
     } else {
       _favorites.add(product);
-      // Thêm vào Firebase
       try {
         await productRef.set({
           'id': product.id,
@@ -98,7 +96,7 @@ class FavoriteProvider extends ChangeNotifier {
         print('Added favorite ${product.id} to Firebase');
       } catch (e) {
         print('Error adding favorite to Firebase: $e');
-        _favorites.remove(product); // Hoàn tác nếu lỗi
+        _favorites.remove(product);
       }
     }
     notifyListeners();

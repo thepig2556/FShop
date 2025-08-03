@@ -50,9 +50,9 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int currentIndex = 0;
 
-  final List<Widget> pages = [
-    HomePage(),
-    const CartPage(),
+  List<Widget> get pages => [
+    const HomePage(),
+    CartPage(key: currentIndex == 1 ? UniqueKey() : const Key('cart')),
     const FavoritePage(),
     const ProfilePage(),
   ];

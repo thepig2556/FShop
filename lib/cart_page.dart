@@ -31,10 +31,15 @@ class _CartPageState extends State<CartPage> {
 
     final database = FirebaseDatabase.instance.ref();
     try {
+      await _cleanInvalidCartItems(userId);
       final cartSnapshot = await database.child('MobileNangCao/Cart/$userId').get();
       if (!cartSnapshot.exists) {
         _showSnackBar('Giỏ hàng không tồn tại');
-        setState(() => isLoading = false);
+        setState(() {
+          cartItems = [];
+          totalPrice = 0;
+          isLoading = false;
+        });
         return;
       }
 
@@ -59,21 +64,31 @@ class _CartPageState extends State<CartPage> {
       final foodsList = foodsSnapshot.exists ? foodsSnapshot.value as List<dynamic>? ?? [] : [];
 
       final enrichedItems = menuFoodItems
-          .where((item) => item['id'] != null && item['quantity'] != null)
+          .where((item) => item != null && item['id'] != null && item['quantity'] != null)
           .map((item) {
         final foodId = item['id'].toString();
         final quantity = item['quantity'] as int;
         final foodData = foodsList.firstWhere(
-              (food) => food != null && food['id'].toString() == foodId,
+              (food) => food != null && food['id']?.toString() == foodId,
           orElse: () => null,
         );
+
+        if (foodData == null) {
+          return {
+            'foodId': foodId,
+            'quantity': quantity,
+            'name': 'Món không tồn tại',
+            'image': '',
+            'price': 0.0,
+          };
+        }
 
         return {
           'foodId': foodId,
           'quantity': quantity,
-          'name': foodData?['name'] ?? 'Không xác định',
-          'image': foodData?['image'] ?? '',
-          'price': (foodData?['price'] as num?)?.toDouble() ?? 0.0,
+          'name': foodData['name'] ?? 'Không xác định',
+          'image': foodData['image'] ?? '',
+          'price': (foodData['price'] as num?)?.toDouble() ?? 0.0,
         };
       }).toList();
 
@@ -92,7 +107,11 @@ class _CartPageState extends State<CartPage> {
     final database = FirebaseDatabase.instance.ref();
     try {
       final cartSnapshot = await database.child('MobileNangCao/Cart/$userId').get();
-      if (!cartSnapshot.exists) return;
+      if (!cartSnapshot.exists) {
+        await database.child('MobileNangCao/Cart/$userId/total').set(0);
+        setState(() => totalPrice = 0);
+        return;
+      }
 
       final cartData = cartSnapshot.value as Map<dynamic, dynamic>? ?? {};
       final menuFood = cartData['MenuFood'];
@@ -104,29 +123,76 @@ class _CartPageState extends State<CartPage> {
 
       if (menuFoodItems.isEmpty) {
         await database.child('MobileNangCao/Cart/$userId/total').set(0);
+        setState(() => totalPrice = 0);
         return;
       }
 
       final foodsSnapshot = await database.child('MobileNangCao/Foods').get();
-      final foodsList = foodsSnapshot.exists ? foodsSnapshot.value as List<dynamic>? ?? [] : [];
+      final foodsList = foodsSnapshot.exists ? (foodsSnapshot.value as List<dynamic>? ?? []) : [];
 
       double total = 0;
       for (var item in menuFoodItems) {
-        final foodId = item['id']?.toString();
-        final quantity = item['quantity'] as int?;
-        if (foodId == null || quantity == null) continue;
+        if (item == null || item['id'] == null || item['quantity'] == null) {
+          print('Invalid item in menuFoodItems: $item');
+          continue;
+        }
+        final foodId = item['id'].toString();
+        final quantity = item['quantity'] as int;
 
         final foodData = foodsList.firstWhere(
-              (food) => food != null && food['id'].toString() == foodId,
+              (food) => food != null && food['id']?.toString() == foodId,
           orElse: () => null,
         );
-        final price = (foodData?['price'] as num?)?.toDouble() ?? 0.0;
+
+        if (foodData == null) {
+          print('Food not found for foodId: $foodId');
+          continue;
+        }
+
+        final price = (foodData['price'] as num?)?.toDouble();
+        if (price == null) {
+          print('Price is null for foodId: $foodId');
+          continue;
+        }
+
         total += price * quantity;
       }
 
       await database.child('MobileNangCao/Cart/$userId/total').set(total);
-    } catch (e) {
+      setState(() => totalPrice = total);
+    } catch (e, stackTrace) {
+      print('Error in _updateCartTotal: $e\n$stackTrace');
       _showSnackBar('Lỗi khi cập nhật tổng tiền: $e');
+    }
+  }
+
+  Future<void> _cleanInvalidCartItems(String userId) async {
+    final database = FirebaseDatabase.instance.ref();
+    try {
+      final cartSnapshot = await database.child('MobileNangCao/Cart/$userId').get();
+      if (!cartSnapshot.exists) return;
+
+      final cartData = cartSnapshot.value as Map<dynamic, dynamic>? ?? {};
+      final menuFood = cartData['MenuFood'];
+      if (menuFood == null) return;
+
+      final foodsSnapshot = await database.child('MobileNangCao/Foods').get();
+      final foodsList = foodsSnapshot.exists ? (foodsSnapshot.value as List<dynamic>? ?? []) : [];
+      final validFoodIds = foodsList.where((food) => food != null).map((food) => food['id'].toString()).toSet();
+
+      if (menuFood is Map) {
+        for (var entry in menuFood.entries) {
+          final foodId = entry.value['id']?.toString();
+          if (foodId != null && !validFoodIds.contains(foodId)) {
+            print('Removing invalid item with foodId: $foodId');
+            await database.child('MobileNangCao/Cart/$userId/MenuFood/${entry.key}').remove();
+          }
+        }
+      }
+      await _updateCartTotal(userId);
+    } catch (e) {
+      print('Error in _cleanInvalidCartItems: $e');
+      _showSnackBar('Lỗi khi dọn dẹp giỏ hàng: $e');
     }
   }
 
@@ -148,8 +214,8 @@ class _CartPageState extends State<CartPage> {
         'id': foodId,
         'quantity': quantity,
       });
-      await _updateCartTotal(userId); // Cập nhật total
-      await _fetchCartItems(); // Làm mới giỏ hàng
+      await _updateCartTotal(userId);
+      await _fetchCartItems();
     } catch (e) {
       _showSnackBar('Lỗi khi cập nhật số lượng: $e');
     }
@@ -165,8 +231,8 @@ class _CartPageState extends State<CartPage> {
     final database = FirebaseDatabase.instance.ref();
     try {
       await database.child('MobileNangCao/Cart/$userId/MenuFood/$foodId').remove();
-      await _updateCartTotal(userId); // Cập nhật total
-      await _fetchCartItems(); // Làm mới giỏ hàng
+      await _updateCartTotal(userId);
+      await _fetchCartItems();
       _showSnackBar('Đã xóa sản phẩm khỏi giỏ hàng');
     } catch (e) {
       _showSnackBar('Lỗi khi xóa sản phẩm: $e');
@@ -179,6 +245,15 @@ class _CartPageState extends State<CartPage> {
 
   String formatPrice(double price) {
     return '${price.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}đ';
+  }
+
+  void reload() {
+    setState(() {
+      isLoading = true;
+      cartItems = [];
+      totalPrice = 0;
+    });
+    _fetchCartItems();
   }
 
   @override

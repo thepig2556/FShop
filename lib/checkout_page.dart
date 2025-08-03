@@ -71,30 +71,26 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final database = FirebaseDatabase.instance.ref();
     final billId = const Uuid().v4();
     final createdAt = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
-    final deliveryFee = 20000.0; // Phí giao hàng cố định
+    final deliveryFee = 20000.0;
     final totalWithFee = widget.totalPrice + deliveryFee;
 
     try {
-      // Chuẩn bị dữ liệu MenuFood theo định dạng Map
       final menuFood = {
         for (var item in widget.cartItems)
           item['foodId']: {'id': item['foodId'], 'quantity': item['quantity']}
       };
 
-      // Lưu hóa đơn vào Firebase
       await database.child('MobileNangCao/Bills/$userId/$billId').set({
         'billID': billId,
         'MenuFood': menuFood,
         'createdAt': createdAt,
-        'statusID': 1, // Giao hàng thành công
+        'statusID': 1,
         'total': totalWithFee,
         'userID': userId,
       });
 
-      // Xóa giỏ hàng
       await database.child('MobileNangCao/Cart/$userId').remove();
 
-      // Hiển thị dialog thành công
       _showSuccessDialog();
     } catch (e) {
       _showSnackBar('Lỗi khi đặt hàng: $e');
@@ -131,8 +127,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
         actions: [
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context); // Đóng dialog
-              Navigator.pop(context); // Quay lại trang trước (CartPage)
+              Navigator.pop(context);
+              Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF6284AF),
@@ -280,8 +276,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 }
-
-// ==== COMPONENTS ====
 
 class _SectionTitle extends StatelessWidget {
   final String title;
