@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:intl/intl.dart'; // For formatting timestamp
 import 'favorite_provider.dart';
 import 'product.dart';
 
@@ -33,6 +33,14 @@ class ProductDetailPage extends StatefulWidget {
 class _ProductDetailPageState extends State<ProductDetailPage> {
   bool isFavorite = false;
   int quantity = 1;
+  List<Map<String, dynamic>> comments = [];
+  int _selectedRating = 1;
+  final TextEditingController _commentController = TextEditingController();
+  double _currentRate = 0;
+  bool _isLoadingComments = false;
+  bool _isSubmittingComment = false;
+  bool _canComment = false;
+  final DatabaseReference _database = FirebaseDatabase.instance.ref();
 
   int get basePrice {
     final parsedPrice = int.tryParse(widget.price.replaceAll('đ', '').trim());
@@ -45,6 +53,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
   String formatPrice(int price) {
     return '${price.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}đ';
+  }
+
+  String _formatTimestamp(int timestamp) {
+    final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+    return DateFormat('dd/MM/yyyy HH:mm').format(date);
   }
 
   void _increaseQuantity() {
@@ -72,7 +85,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       id: widget.id,
       name: widget.name,
       image: widget.image,
-      rate: widget.rate,
+      rate: _currentRate != 0 ? _currentRate : widget.rate,
       description: widget.description,
       price: basePrice,
     );
@@ -83,6 +96,194 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     setState(() {
       isFavorite = favoriteProvider.isFavorite(product);
     });
+  }
+
+  Future<void> _checkCanComment() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return;
+
+    try {
+      final snapshot = await _database
+          .child('MobileNangCao/Bills/$userId')
+          .get()
+          .timeout(const Duration(seconds: 10));
+
+      if (snapshot.exists) {
+        final bills = Map<String, dynamic>.from(snapshot.value as Map);
+        bool canComment = false;
+
+        for (var bill in bills.values) {
+          final billData = Map<String, dynamic>.from(bill);
+          if (billData['statusID'] == 1) {
+            final menuFood = billData['MenuFood'];
+            if (menuFood is List) {
+              for (var item in menuFood) {
+                if (item != null && item['id'] == widget.id.toString()) {
+                  canComment = true;
+                  break;
+                }
+              }
+            } else if (menuFood is Map) {
+              for (var item in menuFood.values) {
+                if (item['id'] == widget.id.toString()) {
+                  canComment = true;
+                  break;
+                }
+              }
+            }
+            if (canComment) break;
+          }
+        }
+
+        setState(() {
+          _canComment = canComment;
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi khi kiểm tra đơn hàng: ${e.toString()}')),
+      );
+    }
+  }
+
+  Future<void> _fetchComments() async {
+    setState(() {
+      _isLoadingComments = true;
+    });
+
+    try {
+      final commentsSnapshot = await _database
+          .child('MobileNangCao/Comments/${widget.id}')
+          .get()
+          .timeout(const Duration(seconds: 10));
+
+      final List<Map<String, dynamic>> loadedComments = [];
+      if (commentsSnapshot.exists) {
+        final commentsData = Map<String, dynamic>.from(commentsSnapshot.value as Map);
+        for (var userId in commentsData.keys) {
+          final userSnapshot = await _database
+              .child('MobileNangCao/Users/$userId')
+              .get()
+              .timeout(const Duration(seconds: 5));
+
+          String userName = 'Người dùng';
+          String userAvatar = 'https://firebasestorage.googleapis.com/v0/b/tousehao.appspot.com/o/avt.png?alt=media&token=d4b325e8-c4f1-49e3-8438-3f980dd4a4bf';
+
+          if (userSnapshot.exists) {
+            final userData = Map<String, dynamic>.from(userSnapshot.value as Map);
+            userName = userData['name'] as String? ?? 'Người dùng';
+            userAvatar = userData['avatar'] as String? ?? userAvatar;
+          }
+
+          final commentData = Map<String, dynamic>.from(commentsData[userId]);
+          loadedComments.add({
+            'userId': userId,
+            'rate': commentData['rate'] as num,
+            'content': commentData['content'] as String? ?? '',
+            'userName': userName,
+            'userAvatar': userAvatar,
+            'timestamp': commentData['timestamp'] as int? ?? 0,
+          });
+        }
+        loadedComments.sort((a, b) => b['rate'].compareTo(a['rate']));
+      }
+
+      setState(() {
+        comments = loadedComments;
+        _isLoadingComments = false;
+      });
+      await _updateFoodRating();
+    } catch (e) {
+      setState(() {
+        _isLoadingComments = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi khi lấy đánh giá: ${e.toString()}')),
+      );
+    }
+  }
+
+  Future<void> _addComment() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng đăng nhập để đánh giá')),
+      );
+      return;
+    }
+
+    if (!_canComment) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Bạn cần đặt hàng món này trước khi đánh giá')),
+      );
+      return;
+    }
+
+    if (_commentController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng nhập nội dung đánh giá')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSubmittingComment = true;
+    });
+
+    try {
+      await _database
+          .child('MobileNangCao/Comments/${widget.id}/$userId')
+          .set({
+        'rate': _selectedRating,
+        'content': _commentController.text.trim(),
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      }).timeout(const Duration(seconds: 10));
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đánh giá đã được thêm'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      _commentController.clear();
+      setState(() {
+        _isSubmittingComment = false;
+      });
+      await _fetchComments();
+    } catch (e) {
+      setState(() {
+        _isSubmittingComment = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi khi thêm đánh giá: ${e.toString()}')),
+      );
+    }
+  }
+
+  Future<void> _updateFoodRating() async {
+    if (comments.isEmpty) {
+      setState(() {
+        _currentRate = 0;
+      });
+      return;
+    }
+
+    final averageRating =
+        comments.map((c) => c['rate'] as num).reduce((a, b) => a + b) /
+            comments.length;
+    try {
+      await _database
+          .child('MobileNangCao/Foods/${widget.id}')
+          .update({'rate': averageRating}).timeout(const Duration(seconds: 10));
+      setState(() {
+        _currentRate = averageRating;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi khi cập nhật đánh giá: ${e.toString()}')),
+      );
+    }
   }
 
   Future<void> _addToCart() async {
@@ -101,32 +302,21 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       return;
     }
 
-    final url = Uri.parse('https://apitaofood.onrender.com/cart/$userId/MenuFood/${widget.id}');
     try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'quantity': quantity,
-        }),
-      );
+      await _database
+          .child('MobileNangCao/Cart/$userId/MenuFood/${widget.id}')
+          .set({'quantity': quantity, 'id': widget.id.toString()}).timeout(const Duration(seconds: 10));
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Đã thêm ${widget.name} (x$quantity) vào giỏ hàng'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi khi thêm vào giỏ hàng: ${response.statusCode}')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đã thêm ${widget.name} (x$quantity) vào giỏ hàng'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi kết nối: $e')),
+        SnackBar(content: Text('Lỗi khi thêm vào giỏ hàng: ${e.toString()}')),
       );
     }
   }
@@ -145,7 +335,154 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
     setState(() {
       isFavorite = favoriteProvider.isFavorite(product);
+      _currentRate = widget.rate;
     });
+    _fetchComments();
+    _checkCanComment();
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  void _showCommentDialog() {
+    int dialogRating = _selectedRating;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Danh sách đánh giá'),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_canComment) ...[
+                      const Text('Thêm đánh giá của bạn:'),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(5, (index) {
+                          return GestureDetector(
+                            onTap: () {
+                              setDialogState(() {
+                                dialogRating = index + 1;
+                              });
+                              setState(() {
+                                _selectedRating = dialogRating;
+                              });
+                            },
+                            child: Icon(
+                              index < dialogRating ? Icons.star : Icons.star_border,
+                              color: Colors.orange,
+                              size: 30,
+                            ),
+                          );
+                        }),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _commentController,
+                        decoration: const InputDecoration(
+                          labelText: 'Nội dung đánh giá',
+                          border: OutlineInputBorder(),
+                        ),
+                        maxLines: 3,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    const Text('Tất cả đánh giá:'),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: comments.isEmpty
+                          ? const Text(
+                        'Chưa có đánh giá nào.',
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      )
+                          : ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: comments.length,
+                        itemBuilder: (context, index) {
+                          final comment = comments[index];
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundImage: comment['userAvatar'].isNotEmpty
+                                    ? NetworkImage(comment['userAvatar'])
+                                    : const AssetImage('assets/images/default_avatar.png')
+                                as ImageProvider,
+                                radius: 20,
+                              ),
+                              title: Text(
+                                comment['userName'],
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: List.generate(5, (i) {
+                                      return Icon(
+                                        i < comment['rate']
+                                            ? Icons.star
+                                            : Icons.star_border,
+                                        color: Colors.orange,
+                                        size: 16,
+                                      );
+                                    }),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(comment['content']),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _formatTimestamp(comment['timestamp']),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                if (_canComment)
+                  ElevatedButton(
+                    onPressed: _isSubmittingComment
+                        ? null
+                        : () {
+                      _addComment();
+                      Navigator.pop(context);
+                    },
+                    child: _isSubmittingComment
+                        ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                        : const Text('Gửi'),
+                  ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Đóng'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -178,7 +515,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       image: DecorationImage(
                         image: widget.image.startsWith('http')
                             ? NetworkImage(widget.image)
-                            : AssetImage('assets/images/${widget.image}') as ImageProvider,
+                            : AssetImage('assets/images/${widget.image}')
+                        as ImageProvider,
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -244,9 +582,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             Row(
                               children: List.generate(5, (index) {
                                 return Icon(
-                                  index < widget.rate.floor()
+                                  index <
+                                      (_currentRate != 0
+                                          ? _currentRate.floor()
+                                          : widget.rate.floor())
                                       ? Icons.star
-                                      : (index < widget.rate ? Icons.star_half : Icons.star_border),
+                                      : (index <
+                                      (_currentRate != 0
+                                          ? _currentRate
+                                          : widget.rate)
+                                      ? Icons.star_half
+                                      : Icons.star_border),
                                   color: Colors.orange,
                                   size: 30,
                                 );
@@ -254,7 +600,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              '${widget.rate} (120 đánh giá)',
+                              '${(_currentRate != 0 ? _currentRate : widget.rate).toStringAsFixed(1)} (${comments.length} đánh giá)',
                               style: TextStyle(
                                 fontSize: 16,
                                 color: Colors.grey[600],
@@ -286,7 +632,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                     child: Container(
                                       padding: const EdgeInsets.all(10),
                                       decoration: BoxDecoration(
-                                        color: quantity > 1 ? Colors.red[50] : Colors.grey[100],
+                                        color: quantity > 1
+                                            ? Colors.red[50]
+                                            : Colors.grey[100],
                                         borderRadius: const BorderRadius.only(
                                           topLeft: Radius.circular(8),
                                           bottomLeft: Radius.circular(8),
@@ -294,13 +642,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                       ),
                                       child: Icon(
                                         Icons.remove,
-                                        color: quantity > 1 ? Colors.red : Colors.grey,
+                                        color:
+                                        quantity > 1 ? Colors.red : Colors.grey,
                                         size: 25,
                                       ),
                                     ),
                                   ),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 10),
                                     child: Text(
                                       quantity.toString(),
                                       style: const TextStyle(
@@ -348,6 +698,94 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             fontSize: 16,
                             color: Colors.grey[700],
                             height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Đánh giá',
+                          style: TextStyle(
+                            fontSize: 25,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2E4057),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _isLoadingComments
+                            ? const Center(child: CircularProgressIndicator())
+                            : comments.isEmpty
+                            ? const Text(
+                          'Chưa có đánh giá nào.',
+                          style: TextStyle(
+                              fontSize: 16, color: Colors.grey),
+                        )
+                            : Column(
+                          children: comments.take(3).map((comment) {
+                            return Card(
+                              margin:
+                              const EdgeInsets.symmetric(vertical: 8),
+                              child: ListTile(
+                                leading: CircleAvatar(
+                                  backgroundImage:
+                                  comment['userAvatar'].isNotEmpty
+                                      ? NetworkImage(
+                                      comment['userAvatar'])
+                                      : const AssetImage(
+                                      'assets/images/default_avatar.png')
+                                  as ImageProvider,
+                                  radius: 20,
+                                ),
+                                title: Text(
+                                  comment['userName'],
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: List.generate(5, (index) {
+                                        return Icon(
+                                          index < comment['rate']
+                                              ? Icons.star
+                                              : Icons.star_border,
+                                          color: Colors.orange,
+                                          size: 20,
+                                        );
+                                      }),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(comment['content']),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      _formatTimestamp(
+                                          comment['timestamp']),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: _showCommentDialog,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF5C7C99),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                          ),
+                          child: const Text(
+                            'Hiển thị thêm bình luận',
+                            style: TextStyle(fontSize: 14),
                           ),
                         ),
                         const SizedBox(height: 24),
