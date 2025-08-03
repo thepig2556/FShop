@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
     final User? user = FirebaseAuth.instance.currentUser;
 
     return MaterialApp(
-      title: 'Pizza MART',
+      title: 'TouseHao',
       debugShowCheckedModeBanner: false,
       home: (user != null && user.emailVerified)
           ? const MainScreen()
