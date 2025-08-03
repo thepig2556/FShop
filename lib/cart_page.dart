@@ -34,7 +34,6 @@ class _CartPageState extends State<CartPage> {
       await _cleanInvalidCartItems(userId);
       final cartSnapshot = await database.child('MobileNangCao/Cart/$userId').get();
       if (!cartSnapshot.exists) {
-        _showSnackBar('Giỏ hàng không tồn tại');
         setState(() {
           cartItems = [];
           totalPrice = 0;
@@ -98,7 +97,6 @@ class _CartPageState extends State<CartPage> {
         isLoading = false;
       });
     } catch (e) {
-      _showSnackBar('Lỗi kết nối: $e');
       setState(() => isLoading = false);
     }
   }
@@ -133,7 +131,6 @@ class _CartPageState extends State<CartPage> {
       double total = 0;
       for (var item in menuFoodItems) {
         if (item == null || item['id'] == null || item['quantity'] == null) {
-          print('Invalid item in menuFoodItems: $item');
           continue;
         }
         final foodId = item['id'].toString();
@@ -145,13 +142,11 @@ class _CartPageState extends State<CartPage> {
         );
 
         if (foodData == null) {
-          print('Food not found for foodId: $foodId');
           continue;
         }
 
         final price = (foodData['price'] as num?)?.toDouble();
         if (price == null) {
-          print('Price is null for foodId: $foodId');
           continue;
         }
 
@@ -161,8 +156,6 @@ class _CartPageState extends State<CartPage> {
       await database.child('MobileNangCao/Cart/$userId/total').set(total);
       setState(() => totalPrice = total);
     } catch (e, stackTrace) {
-      print('Error in _updateCartTotal: $e\n$stackTrace');
-      _showSnackBar('Lỗi khi cập nhật tổng tiền: $e');
     }
   }
 
@@ -191,20 +184,16 @@ class _CartPageState extends State<CartPage> {
       }
       await _updateCartTotal(userId);
     } catch (e) {
-      print('Error in _cleanInvalidCartItems: $e');
-      _showSnackBar('Lỗi khi dọn dẹp giỏ hàng: $e');
     }
   }
 
   Future<void> _updateQuantity(String foodId, int quantity) async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) {
-      _showSnackBar('Vui lòng đăng nhập để cập nhật giỏ hàng');
       return;
     }
 
     if (quantity > 50) {
-      _showSnackBar('Số lượng tối đa là 50');
       return;
     }
 
@@ -217,14 +206,12 @@ class _CartPageState extends State<CartPage> {
       await _updateCartTotal(userId);
       await _fetchCartItems();
     } catch (e) {
-      _showSnackBar('Lỗi khi cập nhật số lượng: $e');
     }
   }
 
   Future<void> _removeItem(String foodId) async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) {
-      _showSnackBar('Vui lòng đăng nhập để xóa món');
       return;
     }
 
@@ -233,9 +220,7 @@ class _CartPageState extends State<CartPage> {
       await database.child('MobileNangCao/Cart/$userId/MenuFood/$foodId').remove();
       await _updateCartTotal(userId);
       await _fetchCartItems();
-      _showSnackBar('Đã xóa sản phẩm khỏi giỏ hàng');
     } catch (e) {
-      _showSnackBar('Lỗi khi xóa sản phẩm: $e');
     }
   }
 

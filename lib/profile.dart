@@ -1,4 +1,5 @@
 import 'package:doan/login_form_page.dart';
+import 'package:doan/order_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -225,6 +226,18 @@ class _ProfilePageState extends State<ProfilePage> {
                   children: [
                     const SizedBox(height: 10),
                     ProfileMenuItem(
+                      icon: Icons.shopping_cart,
+                      label: 'Đơn hàng',
+                      color: const Color(0xFF6284AF),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const OrderPage()),
+                        );
+                      },
+                    ),
+                    const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                    ProfileMenuItem(
                       icon: Icons.person_rounded,
                       label: 'Chi tiết người dùng',
                       color: const Color(0xFF6284AF),
@@ -236,12 +249,6 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         );
                       },
-                    ),
-                    const Divider(height: 1, color: Color(0xFFE2E8F0)),
-                    const ProfileMenuItem(
-                      icon: Icons.settings_rounded,
-                      label: 'Cài đặt',
-                      color: Color(0xFF6284AF),
                     ),
                     const Divider(height: 1, color: Color(0xFFE2E8F0)),
                     const ProfileMenuItem(

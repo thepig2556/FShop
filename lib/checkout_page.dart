@@ -86,7 +86,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         'billID': billId,
         'MenuFood': menuFood,
         'createdAt': createdAt,
-        'statusID': 1,
+        'statusID': 2,
         'total': totalWithFee,
         'userID': userId,
       });
@@ -217,7 +217,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       title: "Thẻ ngân hàng / Ví điện tử",
                       value: PaymentMethod.card,
                       groupValue: _selectedMethod,
-                      onChanged: (value) => setState(() => _selectedMethod = value!),
+                      onChanged: null, // Disable the card payment option
                       primaryColor: primaryColor,
                     ),
 
@@ -368,7 +368,7 @@ class _PaymentTile extends StatelessWidget {
   final String title;
   final PaymentMethod value;
   final PaymentMethod groupValue;
-  final ValueChanged<PaymentMethod?> onChanged;
+  final ValueChanged<PaymentMethod?>? onChanged; // Made nullable
   final Color primaryColor;
 
   const _PaymentTile({
@@ -396,7 +396,12 @@ class _PaymentTile extends StatelessWidget {
           value: value,
           groupValue: groupValue,
           activeColor: primaryColor,
-          title: Text(title),
+          title: Text(
+            title,
+            style: TextStyle(
+              color: onChanged == null ? Colors.grey : Colors.black, // Grey out text when disabled
+            ),
+          ),
           onChanged: onChanged,
         ),
       ),
