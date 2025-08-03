@@ -127,15 +127,18 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       backgroundColor: const Color(0xFF2E4057),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 0),
+              SizedBox(height: screenHeight * 0.02),
               const Text(
                 'Đăng ký',
                 textAlign: TextAlign.center,
@@ -144,21 +147,23 @@ class _RegisterPageState extends State<RegisterPage> {
                   fontSize: 42,
                   fontWeight: FontWeight.bold,
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: screenHeight * 0.02),
               const Text(
                 'Đã có thêm nhiều lợi ích, hãy đăng ký tài khoản của bạn bằng cách điền một số thông tin',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Color(0xFFD5DBDB),
-                  fontSize: 21,
+                  fontSize: 18,
                   fontWeight: FontWeight.w500,
                   height: 1.4,
                 ),
+                softWrap: true,
               ),
-              const SizedBox(height: 25),
+              SizedBox(height: screenHeight * 0.03),
               Container(
-                padding: const EdgeInsets.all(25),
+                padding: EdgeInsets.all(screenWidth * 0.06),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF8F9FA),
                   borderRadius: BorderRadius.circular(16),
@@ -177,25 +182,25 @@ class _RegisterPageState extends State<RegisterPage> {
                     children: [
                       _buildFieldLabel('Tên'),
                       _buildNameField(),
-                      const SizedBox(height: 18),
+                      SizedBox(height: screenHeight * 0.02),
                       _buildFieldLabel('Email'),
                       _buildEmailField(),
-                      const SizedBox(height: 18),
+                      SizedBox(height: screenHeight * 0.02),
                       _buildFieldLabel('Mật khẩu'),
                       _buildPasswordField(),
-                      const SizedBox(height: 18),
+                      SizedBox(height: screenHeight * 0.02),
                       _buildFieldLabel('Xác nhận mật khẩu'),
                       _buildConfirmPasswordField(),
-                      const SizedBox(height: 18),
+                      SizedBox(height: screenHeight * 0.02),
                       _buildFieldLabel('Ngày sinh'),
                       _buildDobField(),
-                      const SizedBox(height: 18),
+                      SizedBox(height: screenHeight * 0.02),
                       _buildFieldLabel('Số điện thoại'),
                       _buildPhoneField(),
-                      const SizedBox(height: 18),
+                      SizedBox(height: screenHeight * 0.02),
                       _buildFieldLabel('Giới tính'),
-                      _buildGenderSelection(),
-                      const SizedBox(height: 25),
+                      _buildGenderSelection(context),
+                      SizedBox(height: screenHeight * 0.03),
                       _buildRegisterButton(context),
                     ],
                   ),
@@ -218,6 +223,7 @@ class _RegisterPageState extends State<RegisterPage> {
           fontSize: 18,
           fontWeight: FontWeight.w600,
         ),
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }
@@ -525,15 +531,18 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _buildGenderSelection() {
+  Widget _buildGenderSelection(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildGenderOption('Nam', Icons.male),
-          _buildGenderOption('Nữ', Icons.female),
-          _buildGenderOption('Khác', Icons.person),
+          Expanded(child: _buildGenderOption('Nam', Icons.male)),
+          SizedBox(width: screenWidth * 0.02),
+          Expanded(child: _buildGenderOption('Nữ', Icons.female)),
+          SizedBox(width: screenWidth * 0.02),
+          Expanded(child: _buildGenderOption('Khác', Icons.person)),
         ],
       ),
     );
@@ -551,7 +560,7 @@ class _RegisterPageState extends State<RegisterPage> {
         });
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFF1B5E20) : Colors.white,
           borderRadius: BorderRadius.circular(8),
@@ -569,12 +578,15 @@ class _RegisterPageState extends State<RegisterPage> {
               size: 20,
             ),
             const SizedBox(width: 8),
-            Text(
-              gender,
-              style: TextStyle(
-                color: isSelected ? Colors.white : const Color(0xFF2E4057),
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+            Flexible(
+              child: Text(
+                gender,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : const Color(0xFF2E4057),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
