@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'product_detail_page.dart';
 
 const Map<int, String> categoryMap = {
@@ -26,40 +27,74 @@ class _HomePageState extends State<HomePage> {
   List<String> cart = [];
   int selectedCategory = 0;
   bool isLoading = true;
+  String userAddress = 'Nhà số 555, Vietnam, Ninh Bình, Tây Ninh';
+  String? avatarUrl;
+  String? userErrorMessage;
 
   @override
   void initState() {
     super.initState();
     _fetchProducts();
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    String? userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) {
+      setState(() {
+        userErrorMessage = 'Vui lòng đăng nhập';
+      });
+      return;
+    }
+
+    final url = Uri.parse('https://apitaofood.onrender.com/users/$userId');
+
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          userAddress = data['address'] ?? userAddress;
+          avatarUrl = data['avatar'];
+        });
+      } else {
+        setState(() {
+          userErrorMessage = 'Không thể tải dữ liệu người dùng';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể tải dữ liệu người dùng')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        userErrorMessage = 'Lỗi kết nối đến API người dùng';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lỗi kết nối đến API người dùng')),
+      );
+    }
   }
 
   Future<void> _fetchProducts() async {
     try {
       final response = await http.get(Uri.parse('https://apitaofood.onrender.com/foods'));
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        print('Decoded data length: ${data.length}');
         if (data.isEmpty) {
-          print('Warning: API returned empty data');
         }
         setState(() {
           allProducts = data.map((item) {
-            print('Raw item: $item');
-            int categoryValue = 0; // Giá trị mặc định
+            int categoryValue = 0;
             try {
               if (item['category'] != null) {
                 final categoryStr = item['category'].toString();
                 categoryValue = int.parse(categoryStr);
               }
             } catch (e) {
-              print('Error parsing category: $e, using default 0');
             }
-            print('Processed category: $categoryValue');
             final image = item['image'] ?? 'default.png';
-            print('Processed image: $image');
             return {
+              'id': item['id'] ?? 0,
               'name': item['name'] ?? 'Unknown',
               'rate': item['rate'] != null ? double.parse(item['rate'].toString()) : 0.0,
               'price': item['price'] != null ? '${item['price']}đ' : '0đ',
@@ -72,9 +107,7 @@ class _HomePageState extends State<HomePage> {
           }).toList();
           filteredProducts = allProducts.where((p) => p['category'] == selectedCategory).toList();
           isLoading = false;
-          print('All products count: ${allProducts.length}');
           if (allProducts.isEmpty) {
-            print('Warning: No products after processing');
           }
         });
       } else {
@@ -89,7 +122,6 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         isLoading = false;
       });
-      print('Error fetching products: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Lỗi: $e')),
       );
@@ -162,18 +194,34 @@ class _HomePageState extends State<HomePage> {
         children: [
           Row(
             children: [
-              const CircleAvatar(
+              CircleAvatar(
                 backgroundColor: Colors.white,
-                child: Icon(Icons.person, color: Color(0xFF5C7C99)),
+                child: avatarUrl != null
+                    ? ClipOval(
+                  child: Image.network(
+                    avatarUrl!,
+                    fit: BoxFit.cover,
+                    width: 40,
+                    height: 40,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.person,
+                      color: Color(0xFF5C7C99),
+                    ),
+                  ),
+                )
+                    : const Icon(
+                  Icons.person,
+                  color: Color(0xFF5C7C99),
+                ),
               ),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Nhà số 555, Vietnam, Ninh Bình, Tây Ninh',
-                      style: TextStyle(
+                      userErrorMessage ?? userAddress,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
@@ -345,6 +393,7 @@ class _HomePageState extends State<HomePage> {
                 context,
                 MaterialPageRoute(
                   builder: (_) => ProductDetailPage(
+                    id: product['id'], // Thêm id
                     name: name,
                     rate: rate,
                     price: price,
@@ -395,13 +444,15 @@ class _HomePageState extends State<HomePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(name,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis),
+                        Text(
+                          name,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         const SizedBox(height: 0),
                         Row(
                           children: [
@@ -416,9 +467,11 @@ class _HomePageState extends State<HomePage> {
                           ],
                         ),
                         const SizedBox(height: 0),
-                        Text(size,
-                            style: TextStyle(
-                                fontSize: 14, color: Colors.grey[600])),
+                        Text(
+                          size,
+                          style: TextStyle(
+                              fontSize: 14, color: Colors.grey[600]),
+                        ),
                         const SizedBox(height: 8),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -448,4 +501,16 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+}
+
+void main() {
+  runApp(const MaterialApp(
+    home: HomePage(),
+  ));
 }

@@ -68,6 +68,7 @@ class FavoritePage extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => ProductDetailPage(
+                    id: product.id, // Thêm id
                     name: product.name,
                     rate: product.rate,
                     price: product.priceString,

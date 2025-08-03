@@ -52,7 +52,6 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> pages = [
     HomePage(),
-    const Center(child: Text("Trang tìm kiếm")),
     const CartPage(),
     const FavoritePage(),
     const ProfilePage(),
@@ -77,7 +76,6 @@ class _MainScreenState extends State<MainScreen> {
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.category), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: ''),
           BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: ''),
           BottomNavigationBarItem(icon: Icon(Icons.favorite), label: ''),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),

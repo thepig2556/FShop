@@ -115,10 +115,7 @@ class _UserDetailPageState extends State<UserDetailPage> {
                             size: 24,
                           ),
                           onPressed: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(builder: (context) => ProfilePage()),
-                            );
+                            Navigator.pop(context);
                           },
                         ),
                       ),

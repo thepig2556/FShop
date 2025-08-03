@@ -152,8 +152,6 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                 height: 150,
               ),
               SizedBox(height: 30),
-
-              // Tiêu đề lớn hơn, dễ đọc hơn
               Text(
                 'Chọn vị trí của bạn',
                 style: TextStyle(
@@ -163,7 +161,6 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                 ),
               ),
               SizedBox(height: 15),
-
               Text(
                 'Vui lòng chọn tỉnh/thành phố và quận/huyện\nnơi bạn đang sinh sống',
                 textAlign: TextAlign.center,
@@ -174,7 +171,6 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                 ),
               ),
               SizedBox(height: 40),
-
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -235,9 +231,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                   ),
                 ],
               ),
-
               SizedBox(height: 30),
-
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -297,9 +291,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                   ),
                 ],
               ),
-
               SizedBox(height: 30),
-
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -350,7 +342,6 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
               ),
 
               SizedBox(height: 50),
-
               Container(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -384,9 +375,7 @@ class _LocationSelectionScreenState extends State<LocationSelectionScreen> {
                   ),
                 ),
               ),
-
               SizedBox(height: 20),
-
               Container(
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(

@@ -37,9 +37,9 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  String userName = "Pizza"; // Giá trị mặc định
-  String userEmail = "pizza@gmail.com"; // Giá trị mặc định
-  String? avatarUrl; // URL ảnh đại diện
+  String userName = 'Pizza';
+  String userEmail = 'pizza@gmail.com';
+  String? avatarUrl;
   String? errorMessage;
 
   @override
@@ -98,7 +98,6 @@ class _ProfilePageState extends State<ProfilePage> {
           physics: const BouncingScrollPhysics(),
           child: Column(
             children: [
-              // Header với gradient
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.fromLTRB(24, 25, 24, 20),
@@ -173,7 +172,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    // Tên người dùng
                     Text(
                       userName,
                       style: const TextStyle(
@@ -184,7 +182,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    // Email
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -211,7 +208,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
               const SizedBox(height: 30),
-              // Profile Menu
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 decoration: BoxDecoration(
@@ -302,7 +298,6 @@ class QuickActionItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Thêm hành động khi nhấn
       },
       child: Container(
         padding: const EdgeInsets.all(16),

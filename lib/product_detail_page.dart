@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'favorite_provider.dart';
 import 'product.dart';
 
 class ProductDetailPage extends StatefulWidget {
+  final int id;
   final String name;
   final double rate;
   final String price;
@@ -13,6 +17,7 @@ class ProductDetailPage extends StatefulWidget {
 
   const ProductDetailPage({
     super.key,
+    required this.id,
     required this.name,
     required this.rate,
     required this.price,
@@ -29,17 +34,29 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   bool isFavorite = false;
   int quantity = 1;
 
-  int get basePrice => int.tryParse(widget.price.replaceAll('đ', '')) ?? widget.priceNumber ?? 0;
-  int get totalPrice => basePrice * quantity;
+  int get basePrice {
+    final parsedPrice = int.tryParse(widget.price.replaceAll('đ', '').trim());
+    return parsedPrice ?? widget.priceNumber.toInt();
+  }
+
+  int get totalPrice {
+    return basePrice * quantity;
+  }
 
   String formatPrice(int price) {
     return '${price.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}đ';
   }
 
   void _increaseQuantity() {
-    setState(() {
-      quantity++;
-    });
+    if (quantity < 50) {
+      setState(() {
+        quantity++;
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Số lượng tối đa là 50')),
+      );
+    }
   }
 
   void _decreaseQuantity() {
@@ -52,6 +69,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
   void _toggleFavorite() {
     final product = Product(
+      id: widget.id,
       name: widget.name,
       image: widget.image,
       rate: widget.rate,
@@ -67,14 +85,50 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     });
   }
 
-  void _addToCart() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Đã thêm ${widget.name} (x$quantity) vào giỏ hàng'),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+  Future<void> _addToCart() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng đăng nhập để thêm vào giỏ hàng')),
+      );
+      return;
+    }
+
+    if (quantity > 50) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Số lượng tối đa là 50')),
+      );
+      return;
+    }
+
+    final url = Uri.parse('https://apitaofood.onrender.com/cart/$userId/MenuFood/${widget.id}');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'quantity': quantity,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Đã thêm ${widget.name} (x$quantity) vào giỏ hàng'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi khi thêm vào giỏ hàng: ${response.statusCode}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi kết nối: $e')),
+      );
+    }
   }
 
   @override
@@ -82,6 +136,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     super.initState();
     final favoriteProvider = context.read<FavoriteProvider>();
     final product = Product(
+      id: widget.id,
       name: widget.name,
       image: widget.image,
       rate: widget.rate,
@@ -175,7 +230,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Tên
                         Text(
                           widget.name,
                           style: const TextStyle(
@@ -212,7 +266,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            // Giá
                             Text(
                               formatPrice(basePrice),
                               style: const TextStyle(
